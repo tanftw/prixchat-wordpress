@@ -1,4 +1,5 @@
 <?php
+
 namespace Heave\PrixChat;
 
 class ChatService
@@ -6,7 +7,7 @@ class ChatService
     public function create_message($data)
     {
         global $wpdb;
-        
+
         $data['content'] = htmlspecialchars($data['content']);
 
         // Create new conversation if it doesn't exist
@@ -36,7 +37,7 @@ class ChatService
             'sender_id' => $data['sender_id'],
             'created_at' => current_time('mysql'),
         ];
-        
+
         return $wpdb->insert($wpdb->prefix . 'prix_chat_conversations', $data);
     }
 
@@ -45,7 +46,7 @@ class ChatService
         global $wpdb;
 
         // Get all conversations with last message
-        $conversations = $wpdb->get_results($wpdb->prepare(
+        $conversations = $wpdb->get_results(
             "SELECT 
                 C.id, 
                 meta, 
@@ -72,9 +73,8 @@ class ChatService
                     GROUP BY conversation_id
                 ) 
             AND 
-                `M`.`conversation_id` = C.id", 
-            $args['after'] ?? 0
-        ));
+                `M`.`conversation_id` = C.id"
+        );
 
         // Users as empty conversations
         $users = get_users();
@@ -85,10 +85,10 @@ class ChatService
                 'avatar' => get_avatar_url($user->ID),
             ];
         }, $users);
-        
+
         // Format conversations for display in the chat
         $conversations = array_map(function ($conversation) {
-           return $this->normalize_conversation($conversation);
+            return $this->normalize_conversation($conversation);
         }, $conversations);
 
         $me = wp_get_current_user();
@@ -106,7 +106,7 @@ class ChatService
                 'avatar' => $user['avatar'],
             ];
         }
-        
+
         return $conversations;
     }
 
@@ -123,7 +123,7 @@ class ChatService
 
         $conversation->peers = json_decode($conversation->peers);
         $conversation->meta = json_decode($conversation->meta);
-        
+
         return $conversation;
     }
 }
