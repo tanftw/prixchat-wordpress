@@ -8,11 +8,9 @@ class ChatService
         global $wpdb;
         
         $data['content'] = htmlspecialchars($data['content']);
-    
-        dd($data['conversation']);
 
         // Create new conversation if it doesn't exist
-        if (!isset($data['conversation_id']) || !is_numeric($data['conversation_id'])) {
+        if (!isset($data['conversation_id']) || !is_numeric($data['conversation_id']) || $data['conversation_id'] == 0) {
             $data['conversation_id'] = $this->create_conversation($data);
         }
 
@@ -46,7 +44,7 @@ class ChatService
     {
         global $wpdb;
 
-        // All conversations
+        // Get all conversations with last message
         $conversations = $wpdb->get_results($wpdb->prepare(
             "SELECT 
                 C.id, 
