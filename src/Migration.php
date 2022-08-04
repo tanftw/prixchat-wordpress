@@ -8,7 +8,7 @@ namespace Heave\PrixChat;
 class Migration
 {
     // Current database version
-    public static $db_version = '0.0.4';
+    public static $db_version = '0.1.2';
 
     public function __construct()
     {
@@ -51,11 +51,13 @@ class Migration
         $create_prix_chat_conversations_table = "CREATE TABLE {$prix_chat_conversations} (
             id {$increments},
             type varchar(10) NOT NULL,
+            hash varchar(32) NOT NULL,
             title VARCHAR(255) DEFAULT NULL,
             meta JSON DEFAULT NULL,
             avatar VARCHAR(255) DEFAULT NULL,
             peers JSON DEFAULT NULL,
             status VARCHAR(10) DEFAULT NULL,
+            peer_pair VARCHAR(40) DEFAULT NULL,
             {$dateTimeColumns},
             {$primaryKeyId}
         ) $charset_collate;";

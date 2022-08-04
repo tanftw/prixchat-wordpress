@@ -22,7 +22,7 @@ class Admin
         add_menu_page(
             'Prix Chat',
             'Prix Chat',
-            'manage_options',
+            'edit_posts',
             'prix-chat',
             [$this, 'render_admin_page'],
             'dashicons-format-chat',

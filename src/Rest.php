@@ -19,101 +19,13 @@ class Rest
         register_rest_route('prix-chat/v1', '/conversations', [
             'methods' => 'GET',
             'callback' => [$this, 'get_conversations'],
+            'permission_callback' => '__return_true',
         ]);
 
         register_rest_route('prix-chat/v1', '/conversations', [
             'methods' => 'POST',
             'callback' => [$this, 'create_conversation'],
-        ]);
-
-        register_rest_route('prix-chat/v1', '/conversations/(?P<conversation_id>\d+)', [
-            'methods' => 'GET',
-            'callback' => [$this, 'get_conversation'],
-        ]);
-
-        register_rest_route('prix-chat/v1', '/conversations/(?P<conversation_id>\d+)/messages', [
-            'methods' => 'GET',
-            'callback' => [$this, 'get_messages'],
-        ]);
-
-        register_rest_route('prix-chat/v1', '/messages', [
-            'methods' => 'POST',
-            'callback' => [$this, 'create_message'],
-        ]);
-
-        register_rest_route('prix-chat/v1', '/conversations/(?P<conversation_id>\d+)/messages/(?P<message_id>\d+)', [
-            'methods' => 'GET',
-            'callback' => [$this, 'get_message'],
-        ]);
-
-        register_rest_route('prix-chat/v1', '/conversations/(?P<conversation_id>\d+)/messages/(?P<message_id>\d+)/delete', [
-            'methods' => 'POST',
-            'callback' => [$this, 'delete_message'],
-        ]);
-
-        register_rest_route('prix-chat/v1', '/conversations/(?P<conversation_id>\d+)/messages/(?P<message_id>\d+)/edit', [
-            'methods' => 'POST',
-            'callback' => [$this, 'edit_message'],
-        ]);
-
-        register_rest_route('prix-chat/v1', '/conversations/(?P<conversation_id>\d+)/messages/(?P<message_id>\d+)/read', [
-            'methods' => 'POST',
-            'callback' => [$this, 'read_message'],
-        ]);
-
-        register_rest_route('prix-chat/v1', '/conversations/(?P<conversation_id>\d+)/messages/(?P<message_id>\d+)/unread', [
-            'methods' => 'POST',
-            'callback' => [$this, 'unread_message'],
-        ]);
-
-        register_rest_route('prix-chat/v1', '/conversations/(?P<conversation_id>\d+)/messages/(?P<message_id>\d+)/star', [
-            'methods' => 'POST',
-            'callback' => [$this, 'star_message'],
-        ]);
-
-        register_rest_route('prix-chat/v1', '/conversations/(?P<conversation_id>\d+)/messages/(?P<message_id>\d+)/unstar', [
-            'methods' => 'POST',
-            'callback' => [$this, 'unstar_message'],
-        ]);
-
-        register_rest_route('prix-chat/v1', '/conversations/(?P<conversation_id>\d+)/messages/(?P<message_id>\d+)/pin', [
-            'methods' => 'POST',
-            'callback' => [$this, 'pin_message'],
-        ]);
-
-        register_rest_route('prix-chat/v1', '/conversations/(?P<conversation_id>\d+)/messages/(?P<message_id>\d+)/unpin', [
-            'methods' => 'POST',
-            'callback' => [$this, 'unpin_message'],
-        ]);
-
-        register_rest_route('prix-chat/v1', '/conversations/(?P<conversation_id>\d+)/messages/(?P<message_id>\d+)/trash', [
-            'methods' => 'POST',
-            'callback' => [$this, 'trash_message'],
-        ]);
-
-        register_rest_route('prix-chat/v1', '/conversations/(?P<conversation_id>\d+)/messages/(?P<message_id>\d+)/untrash', [
-            'methods' => 'POST',
-            'callback' => [$this, 'untrash_message'],
-        ]);
-
-        register_rest_route('prix-chat/v1', '/conversations/(?P<conversation_id>\d+)/messages/(?P<message_id>\d+)/delete', [
-            'methods' => 'POST',
-            'callback' => [$this, 'delete_message'],
-        ]);
-
-        register_rest_route('prix-chat/v1', '/conversations/(?P<conversation_id>\d+)/peers', [
-            'methods' => 'GET',
-            'callback' => [$this, 'get_peers'],
-        ]);
-
-        register_rest_route('prix-chat/v1', '/conversations/(?P<conversation_id>\d+)/peers', [
-            'methods' => 'POST',
-            'callback' => [$this, 'add_peer'],
-        ]);
-
-        register_rest_route('prix-chat/v1', '/conversations/(?P<conversation_id>\d+)/peers/(?P<peer_id>\d+)', [
-            'methods' => 'DELETE',
-            'callback' => [$this, 'remove_peer'],
+            'permission_callback' => '__return_true',
         ]);
     }
 

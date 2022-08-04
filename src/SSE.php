@@ -17,6 +17,7 @@ class SSE
         register_rest_route('prix-chat/v1', '/sse', [
             'methods' => 'GET',
             'callback' => [$this, 'sse_callback'],
+            'permission_callback' => '__return_true',
         ]);
     }
 

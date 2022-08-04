@@ -15,13 +15,53 @@ class BroadcastService
         $this->queue[] = $message;
     }
 
-    public function get_messages($args = [])
+    private function get_conversation_id_from_hash($hash)
     {
         global $wpdb;
 
+        $hash_id = substr($hash, 1);
+      
+        if ($hash[0] === 'g') {
+            return intval($hash_id);
+        }
+
+        $current_user_id = get_current_user_id();
+        $target_id = $hash_id;
+
+        $peer_pair = "{$current_user_id}-{$target_id}";
+
+        if ($current_user_id > $target_id) {
+            $peer_pair = "{$target_id}-{$current_user_id}";        
+        }
+
+        $conversationId = $wpdb->get_var(
+            $wpdb->prepare(
+                "SELECT id FROM {$wpdb->prefix}prix_chat_conversations WHERE peer_pair = %s",
+                $peer_pair
+            )
+        );
+
+        return $conversationId;
+    }
+
+    public function get_messages($args = [])
+    {
+        global $wpdb;
+        $hash = $this->request->get_param('id');
+        
+        if (!$hash) {
+            return;
+        }
+
+        $id = $this->get_conversation_id_from_hash($hash);
+
+        if (!$id) {
+            return [];
+        }
+
         $messages = $wpdb->get_results($wpdb->prepare(
             "SELECT * FROM {$wpdb->prefix}prix_chat_messages WHERE conversation_id = %d AND id > %d ORDER BY id ASC",
-            $this->request->get_param('id', 0),
+            $id,
             $args['after'] ?? 0
         ));
 

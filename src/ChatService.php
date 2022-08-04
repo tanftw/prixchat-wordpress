@@ -4,26 +4,58 @@ namespace Heave\PrixChat;
 
 class ChatService
 {
+
+    private function get_conversation_id_from_hash($hash)
+    {
+        global $wpdb;
+
+        $hash_id = substr($hash, 1);
+
+        if ($hash[0] === 'g') {
+            return intval($hash_id);
+        }
+
+        $current_user_id = get_current_user_id();
+        $target_id = $hash_id;
+
+        $hash = "{$current_user_id}-{$target_id}";
+
+        if ($current_user_id > $target_id) {
+            $hash = "{$target_id}-{$current_user_id}";
+        }
+
+        $conversationId = $wpdb->get_var(
+            $wpdb->prepare(
+                "SELECT id FROM {$wpdb->prefix}prix_chat_conversations WHERE peer_pair = %s",
+                $hash
+            )
+        );
+
+        return $conversationId;
+    }
+
     public function create_message($data)
     {
         global $wpdb;
 
-        $data['content'] = htmlspecialchars($data['content']);
+        $message = $data;
+        $message['content'] = htmlspecialchars($message['content']);
 
-        // Create new conversation if it doesn't exist
-        if (!isset($data['conversation_id']) || !is_numeric($data['conversation_id']) || $data['conversation_id'] == 0) {
-            $data['conversation_id'] = $this->create_conversation($data);
+        $conversationId = $this->get_conversation_id_from_hash($message['conversation_id']);
+
+        if (!$conversationId) {
+            $conversationId = $this->create_conversation($data);
         }
 
-        $data = [
+        $message = [
             'type' => 'text',
-            'conversation_id' => $data['conversation_id'],
+            'conversation_id' => $conversationId,
             'sender_id'         => get_current_user_id(),
-            'content'           => $data['content'],
+            'content'           => $message['content'],
             'created_at'        => current_time('mysql'),
         ];
 
-        $wpdb->insert($wpdb->prefix . 'prix_chat_messages', $data);
+        $wpdb->insert($wpdb->prefix . 'prix_chat_messages', $message);
 
         return $wpdb->insert_id;
     }
@@ -32,13 +64,25 @@ class ChatService
     {
         global $wpdb;
 
+        $my_id = get_current_user_id();
+        if ($data['conversation_id'][0] === '@') {
+            $target_user_id = substr($data['conversation_id'], 1);
+        }
+
+        $peer_pair = "{$my_id}-{$target_user_id}";
+        if ($my_id > $target_user_id) {
+            $peer_pair = "{$target_user_id}-{$my_id}";
+        }
+
         $data = [
-            'peer_id' => $data['peer_id'],
-            'sender_id' => $data['sender_id'],
-            'created_at' => current_time('mysql'),
+            'type'          => 'dm',
+            'created_at'    => current_time('mysql'),
+            'peer_pair'     => $peer_pair,
         ];
 
-        return $wpdb->insert($wpdb->prefix . 'prix_chat_conversations', $data);
+        $wpdb->insert($wpdb->prefix . 'prix_chat_conversations', $data);
+
+        return $wpdb->insert_id;
     }
 
     public function get_conversations($args = [])
@@ -73,7 +117,8 @@ class ChatService
                     GROUP BY conversation_id
                 ) 
             AND 
-                `M`.`conversation_id` = C.id"
+                `M`.`conversation_id` = C.id
+            AND C.type = 'group'"
         );
 
         // Users as empty conversations
@@ -96,6 +141,7 @@ class ChatService
         // Add users as empty conversations
         foreach ($users as $user) {
             $conversations[] = [
+                'id' => '@' . $user['id'],
                 'type'  => 'dm',
                 'messages' => [],
                 'peers' => [
@@ -112,6 +158,8 @@ class ChatService
 
     public function normalize_conversation($conversation)
     {
+        $conversation->id = 'g' . $conversation->id;
+
         $conversation->messages = [
             [
                 'type' => $conversation->last_message_type,
