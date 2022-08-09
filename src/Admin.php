@@ -44,7 +44,6 @@ class Admin
             'name' => $current_user->display_name,
             'avatar' => get_avatar_url($current_user->ID),
         ];
-        
 
         wp_localize_script('prix-chat-admin', 'prix', [
             'apiUrl'        => home_url('/wp-json/prix-chat/v1/'),

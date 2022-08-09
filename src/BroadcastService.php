@@ -4,11 +4,18 @@ namespace Heave\PrixChat;
 
 class BroadcastService
 {
-    protected $last_id = 0;
+    protected $after;
 
     protected $queue = [];
 
     public $request;
+
+    public $chat_service;
+
+    public function __construct()
+    {
+        $this->chat_service = new ChatService();
+    }
 
     public function add($message)
     {
@@ -20,7 +27,7 @@ class BroadcastService
         global $wpdb;
 
         $hash_id = substr($hash, 1);
-      
+
         if ($hash[0] === 'g') {
             return intval($hash_id);
         }
@@ -31,7 +38,7 @@ class BroadcastService
         $peer_pair = "{$current_user_id}-{$target_id}";
 
         if ($current_user_id > $target_id) {
-            $peer_pair = "{$target_id}-{$current_user_id}";        
+            $peer_pair = "{$target_id}-{$current_user_id}";
         }
 
         $conversationId = $wpdb->get_var(
@@ -44,47 +51,17 @@ class BroadcastService
         return $conversationId;
     }
 
-    public function get_messages($args = [])
-    {
-        global $wpdb;
-        $hash = $this->request->get_param('id');
-        
-        if (!$hash) {
-            return;
-        }
-
-        $id = $this->get_conversation_id_from_hash($hash);
-
-        if (!$id) {
-            return [];
-        }
-
-        $messages = $wpdb->get_results($wpdb->prepare(
-            "SELECT * FROM {$wpdb->prefix}prix_chat_messages WHERE conversation_id = %d AND id > %d ORDER BY id ASC",
-            $id,
-            $args['after'] ?? 0
-        ));
-
-        // Format messages for display in the chat
-        array_map(function ($message) {
-            $message->reactions = [];
-            // Replace \n with <br>
-            $message->content = str_replace("\n", "<br>", $message->content);
-
-            return $message;
-        }, $messages);
-
-        return $messages;
-    }
-
     public function send()
     {
-        $messages = $this->get_messages([
-            'after' => $this->last_id,
+
+        $messages = $this->chat_service->get_messages([
+            'after' => $this->after,
+            'conversation_id' => $this->request->get_param('conversation_id'),
         ]);
 
         if (count($messages) > 0) {
-            $this->last_id = end($messages)->id;
+            $this->after = $messages[0]->id;
+            $messages = array_reverse($messages);
             $json = json_encode($messages);
             echo "data: {$json}\n\n";
             ob_flush();

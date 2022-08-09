@@ -4,29 +4,13 @@ namespace Heave\PrixChat;
 
 class ChatService
 {
-
     private function get_conversation_id_from_hash($hash)
     {
         global $wpdb;
 
-        $hash_id = substr($hash, 1);
-
-        if ($hash[0] === 'g') {
-            return intval($hash_id);
-        }
-
-        $current_user_id = get_current_user_id();
-        $target_id = $hash_id;
-
-        $hash = "{$current_user_id}-{$target_id}";
-
-        if ($current_user_id > $target_id) {
-            $hash = "{$target_id}-{$current_user_id}";
-        }
-
         $conversationId = $wpdb->get_var(
             $wpdb->prepare(
-                "SELECT id FROM {$wpdb->prefix}prix_chat_conversations WHERE peer_pair = %s",
+                "SELECT id FROM {$wpdb->prefix}prix_chat_conversations WHERE hash = %s",
                 $hash
             )
         );
@@ -60,6 +44,44 @@ class ChatService
         return $wpdb->insert_id;
     }
 
+    public function get_messages($args = [])
+    {
+        global $wpdb;
+
+        $sqlStr = "SELECT * FROM {$wpdb->prefix}prix_chat_messages WHERE conversation_id = %d";
+
+        if (isset($args['after'])) {
+            $sqlStr .= " AND id > %d";
+        }
+
+        if (isset($args['before'])) {
+            $sqlStr .= " AND id < %d";
+        }
+
+        $sqlStr .= " ORDER BY id DESC LIMIT 15";
+
+        $beforeAfter = $args['before'] ?? $args['after'] ?? 0;
+
+        $query = $wpdb->prepare(
+            $sqlStr,
+            $args['conversation_id'],
+            $beforeAfter
+        );
+
+        $messages = $wpdb->get_results($query);
+
+        // Format messages for display in the chat
+        array_map(function ($message) {
+            $message->reactions = [];
+            // Replace \n with <br>
+            $message->content = str_replace("\n", "<br>", $message->content);
+
+            return $message;
+        }, $messages);
+
+        return $messages;
+    }
+
     public function create_conversation($data)
     {
         global $wpdb;
@@ -69,15 +91,15 @@ class ChatService
             $target_user_id = substr($data['conversation_id'], 1);
         }
 
-        $peer_pair = "{$my_id}-{$target_user_id}";
+        $hash = "{$my_id}-{$target_user_id}";
         if ($my_id > $target_user_id) {
-            $peer_pair = "{$target_user_id}-{$my_id}";
+            $hash = "{$target_user_id}-{$my_id}";
         }
 
         $data = [
             'type'          => 'dm',
             'created_at'    => current_time('mysql'),
-            'peer_pair'     => $peer_pair,
+            'hash'     => $hash,
         ];
 
         $wpdb->insert($wpdb->prefix . 'prix_chat_conversations', $data);
@@ -95,7 +117,8 @@ class ChatService
                 C.id, 
                 meta, 
                 peers, 
-                status, 
+                status,
+                hash,
                 content, 
                 sender_id, 
                 title, 
@@ -169,6 +192,23 @@ class ChatService
             ],
         ];
 
+
+        $conversation->peers = json_decode($conversation->peers);
+        $conversation->meta = json_decode($conversation->meta);
+
+        return $conversation;
+    }
+
+    public function get_conversation_by_hash($hash)
+    {
+        global $wpdb;
+
+        $query = $wpdb->prepare(
+            "SELECT * FROM {$wpdb->prefix}prix_chat_conversations WHERE hash = %s",
+            $hash
+        );
+
+        $conversation = $wpdb->get_row($query);
         $conversation->peers = json_decode($conversation->peers);
         $conversation->meta = json_decode($conversation->meta);
 
