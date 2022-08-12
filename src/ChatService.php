@@ -48,6 +48,15 @@ class ChatService
     {
         global $wpdb;
 
+        if (!isset($args['conversation_id'])) {
+            return [];
+        }
+
+        // Get conversation
+        $conversation = Conversation::find($args['conversation_id'], $withs = [
+            'peers'
+        ]);
+
         $sqlStr = "SELECT * FROM {$wpdb->prefix}prix_chat_messages WHERE conversation_id = %d";
 
         if (isset($args['after'])) {
@@ -71,15 +80,23 @@ class ChatService
         $messages = $wpdb->get_results($query);
 
         // Format messages for display in the chat
-        array_map(function ($message) {
-            $message->reactions = [];
-            // Replace \n with <br>
-            $message->content = str_replace("\n", "<br>", $message->content);
-
-            return $message;
+        array_map(function ($message) use ($conversation) {
+            return $this->format_message($message, $conversation);
         }, $messages);
 
         return $messages;
+    }
+
+    public function format_message($message, $conversation)
+    {
+        $message->conversation = $conversation;
+        $message->content = nl2br($message->content);
+        $message->reactions = [];
+       
+        $message->sender = $conversation->peers[$message->sender_id];
+        // $message->created_at = date('Y-m-d H:i:s', strtotime($message->created_at));
+
+        return $message;
     }
 
     public function create_conversation($data)
@@ -183,17 +200,27 @@ class ChatService
     {
         $conversation->id = 'g' . $conversation->id;
 
+        $peers = json_decode($conversation->peers);
+        
+        $sender = [];
+        
+        if (is_array($peers) && count($peers) > 0) {
+            $sender = array_filter($peers, function ($peer) use ($conversation) {
+                return $peer->id === $conversation->sender_id;
+            })[0];
+        }
+
         $conversation->messages = [
             [
-                'type' => $conversation->last_message_type,
-                'content' => $conversation->last_message_content,
-                'sender_id' => $conversation->last_message_sender_id,
-                'created_at' => $conversation->last_message_at,
+                'type'          => $conversation->last_message_type,
+                'content'       => $conversation->last_message_content,
+                'sender_id'     => $conversation->last_message_sender_id,
+                'sender'        => $sender,
+                'created_at'    => $conversation->last_message_at,
             ],
         ];
 
-
-        $conversation->peers = json_decode($conversation->peers);
+        $conversation->peers = $peers;
         $conversation->meta = json_decode($conversation->meta);
 
         return $conversation;

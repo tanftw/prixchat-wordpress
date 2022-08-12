@@ -53,7 +53,6 @@ class BroadcastService
 
     public function send()
     {
-
         $messages = $this->chat_service->get_messages([
             'after' => $this->after,
             'conversation_id' => $this->request->get_param('conversation_id'),
@@ -85,17 +84,12 @@ class BroadcastService
         header('Connection: keep-alive');
         header('X-Accel-Buffering: no');
 
-        while (true) {
-
+        while (!connection_aborted()) {
             // Send data to client
             $this->send();
 
             // Wait 1 second for the next message / event
             sleep(1);
-
-            if (connection_aborted()) {
-                exit;
-            }
         }
     }
 }

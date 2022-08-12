@@ -43,8 +43,6 @@ SELECT * FROM messages WHERE content LIKE %s AND conversation_id = 1;
 - Get unread messages of user
 SELECT count(id) FROM messages WHERE sent_at > A.last_seen  (SELECT last_seen, conversation_id FROM conversations WHERE user_id = 1 A) 
 
-
-- Load old messages on scroll up only
 - New messages badge on admin menu
 - Last messages from direct messages
 - Fix: Getting id from url wrong, so saving messages wrong conversation

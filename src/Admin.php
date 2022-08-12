@@ -14,7 +14,7 @@ class Admin
         add_action('admin_menu', [$this, 'add_admin_page']);
 
         // Register admin page scripts
-        add_action('admin_enqueue_scripts', [$this, 'enqueue_admin_scripts']);
+        add_action('admin_enqueue_scripts', [$this, 'enqueue_admin_scripts'], 999);
     }
 
     public function add_admin_page()
