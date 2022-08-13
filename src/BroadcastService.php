@@ -65,10 +65,6 @@ class BroadcastService
             echo "data: {$json}\n\n";
             ob_flush();
             flush();
-        } else {
-            echo "data: ping\n\n";
-            ob_flush();
-            flush();
         }
     }
 

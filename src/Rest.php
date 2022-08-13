@@ -69,9 +69,9 @@ class Rest
 
     public function create_message($request)
     {
-        $message = $request->get_params();
+        $data = $request->get_params();
         
-        $id = $this->chat_service->create_message($message);
+        $id = $this->chat_service->create_message($data);
 
         return new \WP_REST_Response([
             'id' => $id,

@@ -23,4 +23,19 @@ class Conversation
 
         return self::normalize($conversation, $withs);
     }
+
+    public static function create($data)
+    {
+        global $wpdb;
+
+        $data = array_merge($data, [
+            'created_at' => current_time('mysql'),
+        ]);
+
+        $wpdb->insert($wpdb->prefix . 'prix_chat_conversations', $data);
+
+        return array_merge($data, [
+            'id' => $wpdb->insert_id,
+        ]);
+    }
 }

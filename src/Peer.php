@@ -1,13 +1,9 @@
 <?php
+
 namespace Heave\PrixChat;
 
 class Peer
 {
-    public static function create($data)
-    {
-        global $wpdb;
-    }
-
     private static function normalize($peer)
     {
         return $peer;
@@ -34,5 +30,31 @@ class Peer
         return array_map(function ($peer) {
             return self::normalize($peer);
         }, $query);
+    }
+
+    /**
+     * Add a peer to a conversation.
+     * 
+     */
+    public static function create($data)
+    {
+        global $wpdb;
+
+        $user = get_user_by('id', $data['user_id']);
+
+        $data = [
+            'conversation_id' => $data['conversation_id'],
+            'user_id'         => $data['user_id'],
+            'name'            => $user->display_name,
+            'avatar'          => get_avatar_url($data['user_id']),
+            'email'           => $user->user_email,
+            'created_at'      => current_time('mysql'),
+        ];
+
+        $wpdb->insert($wpdb->prefix . 'prix_chat_peers', $data);
+
+        return array_merge($data, [
+            'id' => $wpdb->insert_id,
+        ]);
     }
 }

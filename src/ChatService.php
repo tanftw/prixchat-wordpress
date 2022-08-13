@@ -20,28 +20,15 @@ class ChatService
 
     public function create_message($data)
     {
-        global $wpdb;
+        $data['content'] = htmlspecialchars($data['content']);
 
-        $message = $data;
-        $message['content'] = htmlspecialchars($message['content']);
-
-        $conversationId = $this->get_conversation_id_from_hash($message['conversation_id']);
-
-        if (!$conversationId) {
-            $conversationId = $this->create_conversation($data);
+        if (!$data['conversation_id']) {
+            $data['conversation_id'] = $this->create_conversation($data);
         }
 
-        $message = [
-            'type' => 'text',
-            'conversation_id' => $conversationId,
-            'sender_id'         => get_current_user_id(),
-            'content'           => $message['content'],
-            'created_at'        => current_time('mysql'),
-        ];
+        $message = Message::create($data);
 
-        $wpdb->insert($wpdb->prefix . 'prix_chat_messages', $message);
-
-        return $wpdb->insert_id;
+        return $message['id'];
     }
 
     public function get_messages($args = [])
@@ -92,7 +79,7 @@ class ChatService
         $message->conversation = $conversation;
         $message->content = nl2br($message->content);
         $message->reactions = [];
-       
+
         $message->sender = $conversation->peers[$message->sender_id];
         // $message->created_at = date('Y-m-d H:i:s', strtotime($message->created_at));
 
@@ -101,27 +88,36 @@ class ChatService
 
     public function create_conversation($data)
     {
-        global $wpdb;
-
         $my_id = get_current_user_id();
         if ($data['conversation_id'][0] === '@') {
-            $target_user_id = substr($data['conversation_id'], 1);
+            $to_id = substr($data['conversation_id'], 1);
         }
 
-        $hash = "{$my_id}-{$target_user_id}";
-        if ($my_id > $target_user_id) {
-            $hash = "{$target_user_id}-{$my_id}";
+        $hash = "{$my_id}-{$to_id}";
+        if ($my_id > $to_id) {
+            $hash = "{$to_id}-{$my_id}";
         }
+
+        // Add peers to relationship table
+        $me = Peer::create([
+            'user_id' => $my_id,
+            'conversation_id' => $data['conversation_id']
+        ]);
+
+        $to = Peer::create([
+            'user_id' => $to_id,
+            'conversation_id' => $data['conversation_id']
+        ]);
 
         $data = [
             'type'          => 'dm',
-            'created_at'    => current_time('mysql'),
-            'hash'     => $hash,
+            'hash'          => $hash,
+            'peers'         => json_encode([$me, $to]),
         ];
 
-        $wpdb->insert($wpdb->prefix . 'prix_chat_conversations', $data);
+        $conversation = Conversation::create($data);
 
-        return $wpdb->insert_id;
+        return $conversation['id'];
     }
 
     public function get_conversations($args = [])
@@ -201,9 +197,9 @@ class ChatService
         $conversation->id = 'g' . $conversation->id;
 
         $peers = json_decode($conversation->peers);
-        
+
         $sender = [];
-        
+
         if (is_array($peers) && count($peers) > 0) {
             $sender = array_filter($peers, function ($peer) use ($conversation) {
                 return $peer->id === $conversation->sender_id;

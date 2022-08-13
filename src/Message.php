@@ -3,23 +3,23 @@ namespace Heave\PrixChat;
 
 class Message
 {
-    private function create($data)
+    public static function create($data)
     {
         global $wpdb;
 
-        $required = [
-            'conversation_id',
-            'sender_id',
-            'message',
+        $data = [
+            'type'              => $data['type'],
+            'conversation_id'   => $data['conversation_id'],
+            'sender_id'         => get_current_user_id(),
+            'content'           => $data['content'],
+            'created_at'        => current_time('mysql'),
         ];
 
-        foreach ($required as $key) {
-            if (!isset($data[$key])) {
-                return false;
-            }
-        }
+        $wpdb->insert($wpdb->prefix . 'prix_chat_messages', $data);
 
-        return $wpdb->insert($wpdb->prefix . 'prix_chat_messages', $data);
+        return array_merge($data, [
+            'id' => $wpdb->insert_id,
+        ]);
     }
 
     public function get($conversation_id, $sender_id, $limit = 10)
