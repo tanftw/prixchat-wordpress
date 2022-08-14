@@ -53,6 +53,13 @@ class BroadcastService
 
     public function send()
     {
+        $params = $this->request->get_params();
+        $conversation_id = $params['conversation_id'];
+
+        if (!is_numeric($conversation_id)) {
+            exit;
+        }
+
         $messages = $this->chat_service->get_messages([
             'after' => $this->after,
             'conversation_id' => $this->request->get_param('conversation_id'),
@@ -63,6 +70,10 @@ class BroadcastService
             $messages = array_reverse($messages);
             $json = json_encode($messages);
             echo "data: {$json}\n\n";
+            ob_flush();
+            flush();
+        } else {
+            echo "data: ping\n\n";
             ob_flush();
             flush();
         }
@@ -80,12 +91,20 @@ class BroadcastService
         header('Connection: keep-alive');
         header('X-Accel-Buffering: no');
 
-        while (!connection_aborted()) {
+        while (true) {
             // Send data to client
             $this->send();
 
             // Wait 1 second for the next message / event
             sleep(1);
+
+            if (connection_status() !== CONNECTION_NORMAL) {
+                exit;
+            }
+
+            // if (connection_aborted()) {
+            //     exit;
+            // }
         }
     }
 }

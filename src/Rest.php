@@ -24,7 +24,7 @@ class Rest
 
         register_rest_route('prix-chat/v1', '/conversation', [
             'methods' => 'GET',
-            'callback' => [$this, 'get_conversation_by_hash'],
+            'callback' => [$this, 'get_conversation'],
             'permission_callback' => '__return_true',
         ]);
 
@@ -60,9 +60,38 @@ class Rest
         return new \WP_REST_Response($conversations, 200);
     }
 
-    public function get_conversation_by_hash($request)
+    private function urlToHash($url)
     {
-        $conversation = $this->chat_service->get_conversation_by_hash($request->get_param('hash'));
+        if ($url[0] === 'g') {
+            return $url;
+        }
+
+        if ($url[0] === '@') {
+            $hash_id = intval(substr($url, 1));
+        }
+
+        $current_user_id = get_current_user_id();
+        $target_id = $hash_id;
+
+        $hash = "{$current_user_id}-{$target_id}";
+
+        if ($current_user_id > $target_id) {
+            $hash = "{$target_id}-{$current_user_id}";
+        }
+
+        return $hash;
+    }
+
+    public function get_conversation($request)
+    {
+        $params = $request->get_params();
+
+        if (isset($params['hash'])) {
+            $hash = $this->urlToHash($params['hash']);
+            $params['hash'] = $hash;
+        }
+
+        $conversation = Conversation::find($params);
 
         return new \WP_REST_Response($conversation, 200);
     }

@@ -45,4 +45,10 @@ SELECT count(id) FROM messages WHERE sent_at > A.last_seen  (SELECT last_seen, c
 
 - New messages badge on admin menu
 - Last messages from direct messages
-- Fix: Getting id from url wrong, so saving messages wrong conversation
+- Remove tailwind and use normal CSS instead
+- Styling for bubble
+- Typing indicator
+- Delete Messages
+- Delete whole conversation
+- Search
+- Reply message feature

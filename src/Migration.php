@@ -8,7 +8,7 @@ namespace Heave\PrixChat;
 class Migration
 {
     // Current database version
-    public static $db_version = '0.1.3';
+    public static $db_version = '0.1.7';
 
     public function __construct()
     {
@@ -57,9 +57,9 @@ class Migration
             avatar VARCHAR(255) DEFAULT NULL,
             peers JSON DEFAULT NULL,
             status VARCHAR(10) DEFAULT NULL,
-            peer_pair VARCHAR(40) DEFAULT NULL,
             {$dateTimeColumns},
-            {$primaryKeyId}
+            {$primaryKeyId},
+            UNIQUE KEY hash (hash)
         ) $charset_collate;";
 
         $create_prix_chat_peers_table = "CREATE TABLE {$prix_chat_peers} (
@@ -74,6 +74,7 @@ class Migration
             last_seen timestamp NULL DEFAULT NULL,
             status varchar(10) DEFAULT NULL,
             role varchar(10) DEFAULT NULL,
+            {$dateTimeColumns},
             {$primaryKeyId}
         ) $charset_collate;";
 
@@ -103,7 +104,7 @@ class Migration
     }
 
     /**
-     * Remove plugin settings on activate.
+     * Remove plugin settings on uninstall
      *
      * @return void
      */
