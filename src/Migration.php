@@ -75,7 +75,8 @@ class Migration
             status varchar(10) DEFAULT NULL,
             role varchar(10) DEFAULT NULL,
             {$dateTimeColumns},
-            {$primaryKeyId}
+            {$primaryKeyId},
+            UNIQUE KEY user_conversation (user_id, conversation_id)
         ) $charset_collate;";
 
         $create_prix_chat_messages_table = "CREATE TABLE {$prix_chat_messages} (

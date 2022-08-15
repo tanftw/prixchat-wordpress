@@ -44,7 +44,6 @@ SELECT * FROM messages WHERE content LIKE %s AND conversation_id = 1;
 SELECT count(id) FROM messages WHERE sent_at > A.last_seen  (SELECT last_seen, conversation_id FROM conversations WHERE user_id = 1 A) 
 
 - New messages badge on admin menu
-- Last messages from direct messages
 - Remove tailwind and use normal CSS instead
 - Styling for bubble
 - Typing indicator

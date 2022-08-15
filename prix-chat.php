@@ -27,6 +27,7 @@ define('PRIX_CHAT_URL', plugins_url('', __FILE__));
 if (is_admin()) {
     new Heave\PrixChat\Migration;
     new Heave\PrixChat\Admin;
+    new Heave\PrixChat\CacheService;
 }
 
 new Heave\PrixChat\Rest;

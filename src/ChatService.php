@@ -68,7 +68,7 @@ class ChatService
         $messages = $wpdb->get_results($query);
 
         // Format messages for display in the chat
-        array_map(function ($message) use ($conversation) {
+        $messages = array_map(function ($message) use ($conversation) {
             return $this->format_message($message, $conversation);
         }, $messages);
 
@@ -84,7 +84,7 @@ class ChatService
         $peers = $conversation->peers;
 
         foreach ($peers as $peer) {
-            if ($peer->id != $message->sender_id) {
+            if ($peer->user_id == $message->sender_id) {
                 $message->sender = $peer;
             }
         }
