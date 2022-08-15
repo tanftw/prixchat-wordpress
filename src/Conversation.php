@@ -6,10 +6,10 @@ class Conversation
     private static function normalize($conversation, $withs = [])
     {
         if (!empty($conversation->peers)) {
-            $conversation->peers = json_decode($conversation->peers);
+            $conversation->peers = json_decode($conversation->peers, true);
         }
 
-        $conversation->meta = json_decode($conversation->meta);
+        $conversation->meta = json_decode($conversation->meta, true);
 
         return $conversation;
     }

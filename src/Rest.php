@@ -14,6 +14,11 @@ class Rest
         add_action('rest_api_init', [$this, 'register_routes']);
     }
 
+    /**
+     * Register routes for the plugin.
+     * 
+     * @todo: Check permissions for each route.
+     */
     public function register_routes()
     {
         register_rest_route('prix-chat/v1', '/conversations', [
@@ -49,6 +54,12 @@ class Rest
         register_rest_route('prix-chat/v1', '/messages', [
             'methods' => 'POST',
             'callback' => [$this, 'create_message'],
+            'permission_callback' => '__return_true',
+        ]);
+
+        register_rest_route('prix-chat/v1', '/reactions', [
+            'methods' => 'POST',
+            'callback' => [$this, 'toggle_reaction'],
             'permission_callback' => '__return_true',
         ]);
     }
@@ -117,5 +128,53 @@ class Rest
         $messages = array_reverse($messages);
 
         return new \WP_REST_Response($messages, 200);
+    }
+
+    public function toggle_reaction($request)
+    {
+        global $wpdb;
+
+        $data = $request->get_params();
+        
+        if (!isset($data['message_id'])) {
+            return new \WP_REST_Response([
+                'message' => 'Message id is required',
+            ], 400);
+        }
+
+        $message = Message::find([
+            'id' => $data['message_id'],
+        ]);
+
+        if (!$message) {
+            return new \WP_REST_Response([
+                'message' => 'Message not found',
+            ], 404);
+        }
+
+        $reaction = trim($data['reaction']);
+
+        $reactions = json_decode($message->reactions, true);
+
+        if (!isset($reactions[$reaction])) {
+            $reactions[$reaction] = [];
+        } 
+
+        $reactions[$reaction][] = [
+            'peer_id' => get_current_user_id(),
+            'reacted_at' => date('Y-m-d H:i:s'),
+        ];
+
+        $reactions = json_encode($reactions);
+
+        $wpdb->update($wpdb->prefix . 'prix_chat_messages', [
+            'reactions' => $reactions,
+        ], [
+            'id' => $message->id,
+        ]);
+
+        return new \WP_REST_Response([
+            'status' => 'ok',
+        ], 200);
     }
 }

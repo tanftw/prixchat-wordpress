@@ -22,13 +22,19 @@ class Message
         ]);
     }
 
-    public function get($conversation_id, $sender_id, $limit = 10)
+    public static function find($args = []) 
     {
         global $wpdb;
 
-        $query = "SELECT * FROM {$wpdb->prefix}prix_chat_messages WHERE conversation_id = %d AND sender_id = %d ORDER BY created_at DESC LIMIT %d";
+        if (isset($args['id'])) {
+            $args['id'] = intval($args['id']);
 
-        return $wpdb->get_results($wpdb->prepare($query, $conversation_id, $sender_id, $limit));
+            $sql = "SELECT * FROM {$wpdb->prefix}prix_chat_messages WHERE id = %d";
+            $sql = $wpdb->prepare($sql, $args['id']);
+            $message = $wpdb->get_row($sql);
+
+            return $message;
+        }
     }
 }
 

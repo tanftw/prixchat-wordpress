@@ -4,20 +4,6 @@ namespace Heave\PrixChat;
 
 class ChatService
 {
-    private function get_conversation_id_from_hash($hash)
-    {
-        global $wpdb;
-
-        $conversationId = $wpdb->get_var(
-            $wpdb->prepare(
-                "SELECT id FROM {$wpdb->prefix}prix_chat_conversations WHERE hash = %s",
-                $hash
-            )
-        );
-
-        return $conversationId;
-    }
-
     public function create_message($data)
     {
         $message = $data['message'];
@@ -77,17 +63,25 @@ class ChatService
 
     public function format_message($message, $conversation)
     {
-        $message->conversation = $conversation;
-        $message->content = nl2br($message->content);
-        $message->reactions = [];
-
         $peers = $conversation->peers;
 
-        foreach ($peers as $peer) {
-            if ($peer->user_id == $message->sender_id) {
-                $message->sender = $peer;
-            }
+        $message->conversation = $conversation;
+        $message->content = nl2br($message->content);
+        $message->reactions = $message->reactions ? json_decode($message->reactions, true) : [];
+
+        if (!empty($message->reactions)) {
+            $message->reactions = array_map(function ($reaction) use ($peers) {
+                return array_map(function ($peer) use ($peers) {
+                    $peer['peer'] = $peers[$peer['peer_id']];
+
+                    return $peer;
+                }, $reaction);
+
+                return $reaction;
+            }, $message->reactions);
         }
+
+        $message->sender = $peers[$message->sender_id] ?? [];
         // $message->created_at = date('Y-m-d H:i:s', strtotime($message->created_at));
 
         return $message;
@@ -125,7 +119,11 @@ class ChatService
         ]);
 
         // Cache peers for future use
-        $conversation['peers'] = json_encode([$me, $to]);
+        $conversation['peers'] = json_encode([
+            $my_id => $me,
+            $to_id => $to
+        ]);
+
         Conversation::update($conversation);
 
         return $conversation['id'];
@@ -174,29 +172,33 @@ class ChatService
         foreach ($conversations as $id => $conversation) {
             $conversation->id = 'g' . $conversation->id;
 
-            $peers = json_decode($conversation->peers);
+            $peers = json_decode($conversation->peers, true);
 
             $sender = [];
+            $recipient = [];
 
             if (is_array($peers) && count($peers) > 0) {
                 foreach ($peers as $peer) {
-                    if ($peer->id != $conversation->sender_id) {
+                    if ($peer['id'] == $conversation->sender_id) {
                         $sender = $peer;
+                    } else {
+                        $recipient = $peer;
                     }
 
-                    if ($peer->user_id !== $me->ID) {
-                        $conversation->title = $peer->name;
+                    if ($peer['user_id'] !== $me->ID) {
+                        $conversation->title = $peer['name'];
 
                         if ($conversation->type === 'dm') {
-                            $conversation->id = '@' . $peer->user_id;
-                            $exclude[] = $peer->user_id;
+                            $conversation->id = '@' . $peer['user_id'];
+                            $exclude[] = $peer['user_id'];
                         }
                     }
                 }
             }
 
-            if (!$conversation->avatar && $sender->avatar) {
-                $conversation->avatar = $sender->avatar;
+
+            if (!$conversation->avatar && $recipient['avatar']) {
+                $conversation->avatar = $recipient['avatar'];
             }
 
             $conversation->messages = [
