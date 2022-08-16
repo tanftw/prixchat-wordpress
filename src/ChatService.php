@@ -7,10 +7,16 @@ class ChatService
     public function create_message($data)
     {
         $message = $data['message'];
-        $message['content'] = htmlspecialchars($message['content']);
+        $message['content'] = esc_html(trim($message['content']));
 
         if (!$message['conversation_id']) {
             $message['conversation_id'] = $this->create_conversation($data['hash']);
+        }
+
+        if ($message['reply_to']) {
+            $message['reply_to_id'] = $message['reply_to']['id'];
+            $message['reply_to']['content'] = esc_html(trim($message['reply_to']['content']));
+            $message['reply_to'] = json_encode($message['reply_to']);
         }
 
         $message = Message::create($message);
@@ -79,6 +85,10 @@ class ChatService
 
                 return $reaction;
             }, $message->reactions);
+        }
+
+        if ($message->reply_to) {
+            $message->reply_to = json_decode($message->reply_to);
         }
 
         $message->sender = $peers[$message->sender_id] ?? [];
