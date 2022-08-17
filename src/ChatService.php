@@ -258,4 +258,24 @@ class ChatService
 
         return $conversations;
     }
+
+    public function set_last_seen($conversation_id)
+    {
+        global $wpdb;
+
+        $now = date('Y-m-d H:i:s');
+        
+        // Update last seen
+        $wpdb->update($wpdb->prefix . 'prix_chat_peers',[
+                'last_seen' => $now,
+            ],
+            [
+                'conversation_id'   => $conversation_id,
+                'user_id'           => get_current_user_id(),
+            ]
+        );
+
+        // Update online status of user
+        update_user_meta(get_current_user_id(), 'last_seen', $now);
+    }
 }

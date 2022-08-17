@@ -62,6 +62,12 @@ class Rest
             'callback' => [$this, 'toggle_reaction'],
             'permission_callback' => '__return_true',
         ]);
+
+        register_rest_route('prix-chat/v1', '/typing', [
+            'methods' => 'POST',
+            'callback' => [$this, 'set_typing'],
+            'permission_callback' => '__return_true',
+        ]);
     }
 
     public function get_conversations($request)
@@ -173,6 +179,38 @@ class Rest
             'id' => $message->id,
         ]);
 
+        return new \WP_REST_Response([
+            'status' => 'ok',
+        ], 200);
+    }
+
+    public function set_typing($request)
+    {
+        global $wpdb;
+
+        $data = $request->get_params();
+        
+        $conversation = Conversation::find([
+            'id' => $data['conversation_id'],
+        ]);
+        
+        if (!$conversation) {
+            return new \WP_REST_Response([
+                'message' => 'Conversation not found',
+            ], 404);
+        }
+        
+        $typing = $data['typing'];
+        
+        $user_id = get_current_user_id();
+        $conversation->peers[$user_id]['typing'] = $typing;
+        
+        $wpdb->update($wpdb->prefix . 'prix_chat_conversations', [
+            'peers' => json_encode($conversation->peers),
+        ], [
+            'id' => $conversation->id,
+        ]);
+        
         return new \WP_REST_Response([
             'status' => 'ok',
         ], 200);

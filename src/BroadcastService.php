@@ -65,18 +65,24 @@ class BroadcastService
             'conversation_id' => $this->request->get_param('conversation_id'),
         ]);
 
+        // Set last seen every 3 seconds
+        $second = date('s');
+        if ($second % 3 === 0) {
+            $this->chat_service->set_last_seen($conversation_id);
+        }
+
         if (count($messages) > 0) {
             $this->after = $messages[0]->id;
             $messages = array_reverse($messages);
             $json = json_encode($messages);
             echo "data: {$json}\n\n";
-            ob_flush();
-            flush();
+          
         } else {
             echo "data: ping\n\n";
-            ob_flush();
-            flush();
         }
+
+        ob_flush();
+        flush();
     }
 
     public function start()
@@ -98,13 +104,10 @@ class BroadcastService
             // Wait 1 second for the next message / event
             sleep(1);
 
+            // Stop broadcasting SSE if the client is not connected
             if (connection_status() !== CONNECTION_NORMAL) {
                 exit;
             }
-
-            // if (connection_aborted()) {
-            //     exit;
-            // }
         }
     }
 }
