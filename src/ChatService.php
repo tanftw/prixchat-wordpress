@@ -143,6 +143,8 @@ class ChatService
     {
         global $wpdb;
 
+        // @todo: Make sure this is only for the current user
+
         // Get all conversations with last message
         $conversations = $wpdb->get_results(
             "SELECT 
@@ -248,8 +250,12 @@ class ChatService
                 'type'  => 'dm',
                 'messages' => [],
                 'peers' => [
-                    $user,
-                    $me
+                    $user['id'] => $user,
+                    $me->ID => [
+                        'id' => $me->ID,
+                        'name' => $me->display_name,
+                        'avatar' => get_avatar_url($me->ID),
+                    ],
                 ],
                 'title' => $user['name'],
                 'avatar' => $user['avatar'],

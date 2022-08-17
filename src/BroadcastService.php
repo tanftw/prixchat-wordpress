@@ -65,6 +65,8 @@ class BroadcastService
             'conversation_id' => $this->request->get_param('conversation_id'),
         ]);
 
+        $conversations = $this->chat_service->get_conversations();
+
         // Set last seen every 3 seconds
         $second = date('s');
         if ($second % 3 === 0) {
@@ -74,7 +76,11 @@ class BroadcastService
         if (count($messages) > 0) {
             $this->after = $messages[0]->id;
             $messages = array_reverse($messages);
-            $json = json_encode($messages);
+            $json = json_encode(compact([
+                'messages',
+                'conversations',
+            ]));
+            
             echo "data: {$json}\n\n";
           
         } else {
