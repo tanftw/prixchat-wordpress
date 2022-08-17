@@ -6,7 +6,7 @@ class CacheService
     public function __construct()
     {
         // Update cache daily
-        // add_action('admin_init', [$this, 'update_peers_cache']);
+        add_action('admin_init', [$this, 'update_peers_cache']);
     }
     
     /**

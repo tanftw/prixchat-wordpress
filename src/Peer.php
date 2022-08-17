@@ -23,13 +23,34 @@ class Peer
     {
         global $wpdb;
 
-        $sql = "SELECT * FROM {$wpdb->prefix}prix_chat_peers WHERE conversation_id = %d";
+        $query = "SELECT * FROM {$wpdb->prefix}prix_chat_peers WHERE 1 = 1";
+        $prepare = [];
 
-        $query = $wpdb->get_results($wpdb->prepare($sql, $args['conversation_id']), OBJECT_K);
+        if (isset($args['conversation_id'])) {
+            $query .= " AND conversation_id = %d";
+            $prepare[] = $args['conversation_id'];
+        }
+        
+        if (isset($args['user_id'])) {
+            $query .= " AND user_id = %d";
+            $prepare[] = $args['user_id'];
+        }
+
+        $query = $wpdb->get_results($wpdb->prepare($query, $prepare), OBJECT_K);
 
         return array_map(function ($peer) {
             return self::normalize($peer);
         }, $query);
+    }
+
+    public static function get_conversation_ids()
+    {
+        global $wpdb;
+
+        $query = "SELECT DISTINCT conversation_id FROM {$wpdb->prefix}prix_chat_peers WHERE user_id = %d";
+        $conversation_ids = $wpdb->get_col($wpdb->prepare($query, get_current_user_id()));
+
+        return $conversation_ids;
     }
 
     /**
@@ -56,5 +77,16 @@ class Peer
         return array_merge($data, [
             'id' => $wpdb->insert_id,
         ]);
+    }
+
+    public static function update($data)
+    {
+        global $wpdb;
+
+        if (!isset($data['id'])) {
+            return false;
+        }
+
+        $wpdb->update($wpdb->prefix . 'prix_chat_peers', $data, compact('id'));
     }
 }

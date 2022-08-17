@@ -37,6 +37,7 @@ class Admin
 
         // Retrieve all users and pass them to scripts
         $conversations = $this->chat_service->get_conversations();
+        
         $current_user = wp_get_current_user();
 
         $me = [

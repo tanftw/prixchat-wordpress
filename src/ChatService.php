@@ -134,6 +134,15 @@ class ChatService
             $to_id => $to
         ]);
 
+        // If we don't have avatar, use $to's avatar
+        if (!$conversation['avatar']) {
+            $conversation['avatar'] = $to['avatar'];
+        }
+
+        if (!$conversation['title']) {
+            $conversation['title'] = $to['name'];
+        }
+
         Conversation::update($conversation);
 
         return $conversation['id'];
@@ -143,11 +152,14 @@ class ChatService
     {
         global $wpdb;
 
-        // @todo: Make sure this is only for the current user
+        $me = wp_get_current_user();
+        $current_user_conversations_ids = Peer::get_conversation_ids();
+        // Convert $current_user_conversations_ids to a comma separated string
+        $current_user_conversations_ids = implode(',', $current_user_conversations_ids);
 
         // Get all conversations with last message
         $conversations = $wpdb->get_results(
-            "SELECT 
+            $wpdb->prepare("SELECT 
                 C.id, 
                 meta, 
                 peers, 
@@ -174,43 +186,38 @@ class ChatService
                     GROUP BY conversation_id
                 ) 
             AND 
-                `M`.`conversation_id` = C.id"
+                `M`.`conversation_id` = C.id
+            AND C.id IN (%1s)
+            ", $current_user_conversations_ids)
         );
 
-        $me = wp_get_current_user();
         $exclude = [];
 
         // Format conversations for display in the chat
         foreach ($conversations as $id => $conversation) {
-            $conversation->id = 'g' . $conversation->id;
-
             $peers = json_decode($conversation->peers, true);
 
-            $sender = [];
-            $recipient = [];
+            $last_message_sender = [];
 
+            $recipient = [];
             if (is_array($peers) && count($peers) > 0) {
-                foreach ($peers as $peer) {
-                    if ($peer['id'] == $conversation->sender_id) {
-                        $sender = $peer;
-                    } else {
+                foreach ($peers as $user_id => $peer) {
+                    if ($user_id == $conversation->last_message_sender_id) {
+                        $last_message_sender = $peer;
+                    }
+                    if ($user_id != $me->ID) {
                         $recipient = $peer;
                     }
 
-                    if ($peer['user_id'] !== $me->ID) {
-                        $conversation->title = $peer['name'];
-
-                        if ($conversation->type === 'dm') {
-                            $conversation->id = '@' . $peer['user_id'];
-                            $exclude[] = $peer['user_id'];
-                        }
+                    if ($conversation->type == 'dm') {
+                        $conversation->id = '@' . $user_id;
+                        $exclude[] = $user_id;
                     }
                 }
             }
 
-
-            if (!$conversation->avatar && $recipient['avatar']) {
-                $conversation->avatar = $recipient['avatar'];
+            if (empty($recipient)) {
+                $recipient = $last_message_sender;
             }
 
             $conversation->messages = [
@@ -218,14 +225,14 @@ class ChatService
                     'type'          => $conversation->last_message_type,
                     'content'       => $conversation->last_message_content,
                     'sender_id'     => $conversation->last_message_sender_id,
-                    'sender'        => $sender,
+                    'sender'        => $last_message_sender,
                     'created_at'    => $conversation->last_message_at,
                 ],
             ];
 
             $conversation->peers = $peers;
             $conversation->meta = json_decode($conversation->meta);
-
+            $conversation->recipient = $recipient;
             $conversations[$id] = $conversation;
         }
 
@@ -234,14 +241,13 @@ class ChatService
             'exclude' => $exclude,
         ]);
 
-        $users = array_map(function ($user) {
-            return [
+        foreach ($users as $index => $user) {
+            $users[$index] = [
                 'id' => $user->ID,
                 'name' => $user->display_name,
                 'avatar' => get_avatar_url($user->ID),
             ];
-        }, $users);
-
+        }
 
         // Add users as empty conversations
         foreach ($users as $user) {
@@ -249,39 +255,11 @@ class ChatService
                 'id' => '@' . $user['id'],
                 'type'  => 'dm',
                 'messages' => [],
-                'peers' => [
-                    $user['id'] => $user,
-                    $me->ID => [
-                        'id' => $me->ID,
-                        'name' => $me->display_name,
-                        'avatar' => get_avatar_url($me->ID),
-                    ],
-                ],
                 'title' => $user['name'],
                 'avatar' => $user['avatar'],
             ];
         }
 
         return $conversations;
-    }
-
-    public function set_last_seen($conversation_id)
-    {
-        global $wpdb;
-
-        $now = date('Y-m-d H:i:s');
-        
-        // Update last seen
-        $wpdb->update($wpdb->prefix . 'prix_chat_peers',[
-                'last_seen' => $now,
-            ],
-            [
-                'conversation_id'   => $conversation_id,
-                'user_id'           => get_current_user_id(),
-            ]
-        );
-
-        // Update online status of user
-        update_user_meta(get_current_user_id(), 'last_seen', $now);
     }
 }
