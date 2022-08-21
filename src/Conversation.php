@@ -18,7 +18,7 @@ class Conversation
             // @todo: Check recipient if it's a DM conversation
             $recipient = [];
             foreach ($conversation->peers as $id => $peer) {
-                if ($peer->id !== $my_id) {
+                if ($peer->user_id !== $my_id) {
                     $recipient = $peer;
                 }
             }

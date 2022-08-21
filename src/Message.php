@@ -17,10 +17,12 @@ class Message
             return [];
         }
 
+        $peer = reset($peers);
+
         $data = [
             'type'              => $data['type'],
             'conversation_id'   => $data['conversation_id'],
-            'sender_id'         => $peers[0]->id,
+            'sender_id'         => $peer->id,
             'content'           => $data['content'],
             'created_at'        => current_time('mysql'),
             'reply_to'          => $data['reply_to'],

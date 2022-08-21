@@ -1,4 +1,5 @@
 <?php
+
 namespace Heave\PrixChat;
 
 class Rest
@@ -109,7 +110,8 @@ class Rest
         }
 
         $conversation = Conversation::find([
-            'hash' => $params['hash']
+            'hash' => $params['hash'],
+            'withs' => ['peers'],
         ]);
 
         return new \WP_REST_Response($conversation, 200);
@@ -118,7 +120,7 @@ class Rest
     public function create_message($request)
     {
         $data = $request->get_params();
-        
+
         $id = $this->chat_service->create_message($data);
 
         return new \WP_REST_Response([
@@ -143,7 +145,7 @@ class Rest
         global $wpdb;
 
         $data = $request->get_params();
-        
+
         if (!isset($data['message_id'])) {
             return new \WP_REST_Response([
                 'message' => 'Message id is required',
@@ -166,7 +168,7 @@ class Rest
 
         if (!isset($reactions[$reaction])) {
             $reactions[$reaction] = [];
-        } 
+        }
 
         $reactions[$reaction][] = [
             'peer_id' => get_current_user_id(),
@@ -191,28 +193,26 @@ class Rest
         global $wpdb;
 
         $data = $request->get_params();
-        
+
         $conversation = Conversation::find([
             'id' => $data['conversation_id'],
         ]);
-        
+
         if (!$conversation) {
             return new \WP_REST_Response([
                 'message' => 'Conversation not found',
             ], 404);
         }
-        
+
         $typing = $data['typing'];
-        
-        $user_id = get_current_user_id();
-        $conversation->peers[$user_id]['typing'] = $typing;
-        
-        $wpdb->update($wpdb->prefix . 'prix_chat_conversations', [
-            'peers' => json_encode($conversation->peers),
+
+        Peer::update([
+            'is_typing' => $typing,
         ], [
-            'id' => $conversation->id,
+            'conversation_id' => $conversation->id,
+            'user_id' => get_current_user_id(),
         ]);
-        
+
         return new \WP_REST_Response([
             'status' => 'ok',
         ], 200);

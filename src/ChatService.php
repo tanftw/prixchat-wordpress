@@ -19,6 +19,14 @@ class ChatService
             $message['reply_to'] = json_encode($message['reply_to']);
         }
 
+        // Set typing to false for the current user
+        Peer::update([
+            'is_typing' => false,
+        ], [
+            'conversation_id'   => $message['conversation_id'],
+            'user_id'           => get_current_user_id(),
+        ]);
+
         $message = Message::create($message);
 
         return $message['id'];
@@ -149,7 +157,7 @@ class ChatService
                 $recipient = [];
                 if (is_array($peers) && count($peers) > 0) {
                     foreach ($peers as $peer) {
-                        if ($peer->user_id == $conversation->last_message_sender_id) {
+                        if ($peer->id == $conversation->last_message_sender_id) {
                             $last_message_sender = $peer;
                         }
 

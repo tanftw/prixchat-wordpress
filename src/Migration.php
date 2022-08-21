@@ -8,7 +8,7 @@ namespace Heave\PrixChat;
 class Migration
 {
     // Current database version
-    public static $db_version = '0.1.8';
+    public static $db_version = '0.1.9';
 
     public function __construct()
     {
@@ -67,16 +67,17 @@ class Migration
             user_id {$nullableInteger},
             name varchar(60) DEFAULT NULL,
             avatar VARCHAR(255) DEFAULT NULL,
-            email varchar(60) DEFAULT NULL,
-            phone varchar(20) DEFAULT NULL,
+            email VARCHAR(60) DEFAULT NULL,
+            phone VARCHAR(20) DEFAULT NULL,
             meta JSON DEFAULT NULL,
             conversation_id {$nullableInteger},
-            last_seen timestamp NULL DEFAULT NULL,
-            last_seen_on int(11) DEFAULT NULL,
+            last_seen TIMESTAMP NULL DEFAULT NULL,
+            last_seen_on INT(11) DEFAULT NULL,'
+            is_typing BOOLEAN DEFAULT NULL, 
             {$dateTimeColumns},
             {$primaryKeyId},
-            status varchar(10) DEFAULT NULL,
-            role varchar(10) DEFAULT NULL,
+            status VARCHAR(10) DEFAULT NULL,
+            role VARCHAR(10) DEFAULT NULL,
             {$dateTimeColumns},
             {$primaryKeyId},
             UNIQUE KEY user_conversation (user_id, conversation_id)
