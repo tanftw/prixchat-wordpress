@@ -213,7 +213,7 @@ class Rest
         $typing = $data['typing'];
 
         Peer::update([
-            'is_typing' => $typing,
+            'is_typing' => (bool) $typing,
         ], [
             'conversation_id' => $conversation->id,
             'user_id' => get_current_user_id(),

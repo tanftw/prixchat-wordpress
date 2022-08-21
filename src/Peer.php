@@ -91,11 +91,11 @@ class Peer
         ]);
     }
 
-    public static function update($data)
+    public static function update($data, $conditions)
     {
         global $wpdb;
 
-        $wpdb->update($wpdb->prefix . 'prix_chat_peers', $data[0], $data[1]);
+        $wpdb->update($wpdb->prefix . 'prix_chat_peers', $data, $conditions);
     }
 
     public static function get_unread_count($user_id)

@@ -26,27 +26,41 @@ class BroadcastService
             exit;
         }
 
+        $response = [];
+
         $messages = Message::get([
             'after' => $this->after,
             'conversation_id' => $this->request->get_param('conversation_id'),
         ]);
 
-        $conversations = [];
+        if ($messages) {
+            $response['messages'] = $messages;
+            $this->after = $messages[0]->id;
+        }
 
-        // Set last seen and fetch conversations every 3 seconds
+        $peers = Peer::get([
+            'conversation_id' => $conversation_id,
+        ]);
+
+        if ($peers) {
+            $response['peers'] = $peers;
+        }
+
+        // Set last seen and fetch conversations every 5 seconds
         $second = date('s');
-        if ($second % 3 === 0) {
+        if ($second % 5 === 0) {
             $conversations = $this->chat_service->get_conversations();
+
+            if ($conversations) {
+                $response['conversations'] = $conversations;
+            }
+
             Peer::set_last_seen($conversation_id);
         }
 
-        if (count($messages) > 0) {
-            $this->after = $messages[0]->id;
+        if (!empty($response)) {
             $messages = array_reverse($messages);
-            $json = json_encode(compact([
-                'messages',
-                'conversations',
-            ]));
+            $json = json_encode($response);
 
             echo "data: {$json}\n\n";
         } else {
