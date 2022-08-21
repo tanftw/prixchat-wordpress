@@ -95,7 +95,7 @@ class Peer
     {
         global $wpdb;
 
-        $wpdb->update($wpdb->prefix . 'prix_chat_peers', $data, $conditions);
+        $wpdb->update($wpdb->prefix . 'prix_chat_peers', $data, $conditions);   
     }
 
     public static function get_unread_count($user_id)

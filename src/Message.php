@@ -20,13 +20,14 @@ class Message
         $peer = reset($peers);
 
         $data = [
-            'type'              => $data['type'],
-            'conversation_id'   => $data['conversation_id'],
-            'sender_id'         => $peer->id,
-            'content'           => $data['content'],
-            'created_at'        => current_time('mysql'),
-            'reply_to'          => $data['reply_to'],
-            'reply_to_id'       => $data['reply_to_id'],
+            'type'            => $data['type'],
+            'conversation_id' => $data['conversation_id'],
+            'peer_id'         => $peer->id,
+            'user_id'         => get_current_user_id(),
+            'content'         => $data['content'],
+            'created_at'      => current_time('mysql'),
+            'reply_to'        => $data['reply_to'],
+            'reply_to_id'     => $data['reply_to_id'],
         ];
 
         $wpdb->insert($wpdb->prefix . 'prix_chat_messages', $data);
@@ -119,7 +120,7 @@ class Message
             $message->reply_to = json_decode($message->reply_to);
         }
 
-        $message->sender = $peers[$message->sender_id] ?? [];
+        $message->sender = $peers[$message->peer_id] ?? [];
 
         // $message->created_at = date('Y-m-d H:i:s', strtotime($message->created_at));
 

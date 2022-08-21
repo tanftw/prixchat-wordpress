@@ -8,7 +8,7 @@ namespace Heave\PrixChat;
 class Migration
 {
     // Current database version
-    public static $db_version = '0.2.0';
+    public static $db_version = '0.2.4';
 
     public function __construct()
     {
@@ -72,13 +72,12 @@ class Migration
             meta JSON DEFAULT NULL,
             conversation_id {$nullableInteger},
             last_seen TIMESTAMP NULL DEFAULT NULL,
-            last_seen_on INT(11) DEFAULT NULL,'
+            last_seen_on INT(11) DEFAULT NULL,
             is_typing TINYINT(1) DEFAULT 0,
             status VARCHAR(10) DEFAULT NULL,
             role VARCHAR(10) DEFAULT NULL,
             {$dateTimeColumns},
-            {$primaryKeyId},
-            UNIQUE KEY user_conversation (user_id, conversation_id)
+            {$primaryKeyId}
         ) $charset_collate;";
 
         $create_prix_chat_messages_table = "CREATE TABLE {$prix_chat_messages} (
@@ -87,7 +86,8 @@ class Migration
             content TEXT DEFAULT NULL,
             history TEXT DEFAULT NULL,
             conversation_id {$nullableInteger},
-            sender_id {$nullableInteger},
+            peer_id {$nullableInteger},
+            user_id {$nullableInteger},
             parent_id {$nullableInteger},
             reactions JSON DEFAULT NULL,
             reply_to_id {$nullableInteger},

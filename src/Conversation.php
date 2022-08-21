@@ -18,7 +18,7 @@ class Conversation
             // @todo: Check recipient if it's a DM conversation
             $recipient = [];
             foreach ($conversation->peers as $id => $peer) {
-                if ($peer->user_id !== $my_id) {
+                if ($peer->user_id != $my_id) {
                     $recipient = $peer;
                 }
             }
@@ -31,10 +31,13 @@ class Conversation
 
             $conversation->avatar = $conversation->avatar ?? $recipient->avatar;
             $conversation->title = $conversation->title ?? $recipient->name;
+            // Limit the size of $conversation->title
+            $conversation->title = substr($conversation->title, 0, 20);
         }
 
         $conversation->meta = json_decode($conversation->meta, true);
-        
+        $conversation->url = $conversation->id;
+
         return $conversation;
     }
 

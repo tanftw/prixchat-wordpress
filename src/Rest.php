@@ -110,8 +110,8 @@ class Rest
     {
         $params = $request->get_params();
 
-        if (isset($params['hash'])) {
-            $params = $this->get_search_params($params['hash']);
+        if (isset($params['url'])) {
+            $params = $this->get_search_params($params['url']);
         }
 
         $find_params = array_merge($params, [

@@ -10,7 +10,7 @@ class ChatService
         $message['content'] = esc_html(trim($message['content']));
 
         if (!$message['conversation_id']) {
-            $message['conversation_id'] = $this->create_conversation($data['hash']);
+            $message['conversation_id'] = $this->create_conversation($data['url']);
         }
 
         if ($message['reply_to']) {
@@ -92,13 +92,13 @@ class ChatService
                 status,
                 hash,
                 content, 
-                sender_id, 
+                peer_id, 
                 title, 
                 C.type as type, 
                 C.avatar as avatar,
                 M.created_at as last_message_at,
                 M.content as last_message_content,
-                M.sender_id as last_message_sender_id,
+                M.peer_id as last_message_peer_id,
                 M.type as last_message_type
             FROM 
                 `wp_prix_chat_conversations` C, 
@@ -145,7 +145,7 @@ class ChatService
 
                 if (is_array($peers) && count($peers) > 0) {
                     foreach ($peers as $peer) {
-                        if ($peer->id == $conversation->last_message_sender_id) {
+                        if ($peer->id == $conversation->last_message_peer_id) {
                             $last_message_sender = $peer;
                         }
 
@@ -162,23 +162,26 @@ class ChatService
                         $recipient = $peer;
                     }
                 }
-                
+
                 $conversation->messages = [
                     [
                         'type'          => $conversation->last_message_type,
-                        'content'       => $conversation->last_message_content,
-                        'sender_id'     => $conversation->last_message_sender_id,
+                        'content'       => substr($conversation->last_message_content, 0, 25),
+                        'peer_id'       => $conversation->last_message_peer_id,
                         'sender'        => $last_message_sender,
                         'created_at'    => $conversation->last_message_at,
                     ],
                 ];
 
+                $conversation->url = $conversation->id;
                 $conversation->peers = $peers;
                 $conversation->meta = json_decode($conversation->meta);
                 $conversation->recipient = $recipient;
                 $conversation->unread_count = $unread_count[$conversation->id] ?? 0;
                 $conversation->avatar = $conversation->avatar ?? $recipient->avatar;
                 $conversation->title = $conversation->title ?? $recipient->name;
+                // Limit the size of $conversation->title
+                $conversation->title = substr($conversation->title, 0, 20);
                 $conversations[$id] = $conversation;
             }
         }
@@ -203,11 +206,11 @@ class ChatService
         // Add users as empty conversations
         foreach ($users as $user) {
             $conversations[] = [
-                'id' => '@' . $user['id'],
-                'type'  => 'dm',
-                'messages' => [],
-                'title' => $user['name'],
-                'avatar' => $user['avatar'],
+                'url'       => '@' . $user['id'],
+                'type'      => 'dm',
+                'messages'  => [],
+                'title'     => $user['name'],
+                'avatar'    => $user['avatar'],
                 'recipient' => $user,
             ];
         }

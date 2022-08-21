@@ -34,7 +34,7 @@ class BroadcastService
         ]);
 
         if ($messages) {
-            $response['messages'] = $messages;
+            $response['messages'] = array_reverse($messages);
             $this->after = $messages[0]->id;
         }
 
@@ -59,7 +59,7 @@ class BroadcastService
         }
 
         if (!empty($response)) {
-            $messages = array_reverse($messages);
+            
             $json = json_encode($response);
 
             echo "data: {$json}\n\n";
