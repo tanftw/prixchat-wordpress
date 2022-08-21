@@ -6,3 +6,5 @@
 - Delete whole conversation
 - Search
 - Highlight conversations with new messages, just need to compare with old one and add isHighlight:1, can compare on frontend or backend.
+
+- Fix: First direct message doesn't works!

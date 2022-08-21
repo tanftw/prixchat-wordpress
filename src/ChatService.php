@@ -55,30 +55,16 @@ class ChatService
         // Add peers to relationship table
         $me = Peer::create([
             'user_id'           => $my_id,
-            'conversation_id'   => $conversation['id']
+            'conversation_id'   => $conversation['id'],
+            'is_typing'         => false,
+            'last_seen'         => wp_date('Y-m-d H:i:s'),
         ]);
 
         $to = Peer::create([
             'user_id'           => $to_id,
-            'conversation_id'   => $conversation['id']
+            'conversation_id'   => $conversation['id'],
+            'is_typing'         => false,
         ]);
-
-        // Cache peers for future use
-        $conversation['peers'] = json_encode([
-            $my_id => $me,
-            $to_id => $to
-        ]);
-
-        // If we don't have avatar, use $to's avatar
-        if (!$conversation['avatar']) {
-            $conversation['avatar'] = $to['avatar'];
-        }
-
-        if (!$conversation['title']) {
-            $conversation['title'] = $to['name'];
-        }
-
-        Conversation::update($conversation);
 
         return $conversation['id'];
     }
@@ -92,6 +78,7 @@ class ChatService
         $exclude = [];
 
         $current_user_conversations_ids = Peer::get_conversation_ids();
+
         // Convert $current_user_conversations_ids to a comma separated string
         $current_user_conversations_ids = implode(',', $current_user_conversations_ids);
 
@@ -155,6 +142,7 @@ class ChatService
                 $last_message_sender = [];
 
                 $recipient = [];
+
                 if (is_array($peers) && count($peers) > 0) {
                     foreach ($peers as $peer) {
                         if ($peer->id == $conversation->last_message_sender_id) {
@@ -166,16 +154,15 @@ class ChatService
                         }
 
                         if ($conversation->type == 'dm') {
-                            $conversation->id = '@' . $peer->user_id;
                             $exclude[] = $peer->user_id;
                         }
                     }
-                }
 
-                if (empty($recipient)) {
-                    $recipient = $last_message_sender;
+                    if (empty($recipient)) {
+                        $recipient = $peer;
+                    }
                 }
-
+                
                 $conversation->messages = [
                     [
                         'type'          => $conversation->last_message_type,
@@ -190,8 +177,14 @@ class ChatService
                 $conversation->meta = json_decode($conversation->meta);
                 $conversation->recipient = $recipient;
                 $conversation->unread_count = $unread_count[$conversation->id] ?? 0;
+                $conversation->avatar = $conversation->avatar ?? $recipient->avatar;
+                $conversation->title = $conversation->title ?? $recipient->name;
                 $conversations[$id] = $conversation;
             }
+        }
+
+        if (($key = array_search($me->ID, $exclude)) !== false) {
+            unset($exclude[$key]);
         }
 
         // Users as empty conversations

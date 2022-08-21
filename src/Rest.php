@@ -78,26 +78,32 @@ class Rest
         return new \WP_REST_Response($conversations, 200);
     }
 
-    private function urlToHash($url)
+    private function get_search_params($url)
     {
         if ($url[0] === 'g') {
-            return $url;
+            return [
+                'hash' => $url
+            ];
         }
 
         if ($url[0] === '@') {
             $hash_id = intval(substr($url, 1));
+
+            $current_user_id = get_current_user_id();
+            $target_id = $hash_id;
+
+            $hash = "{$current_user_id}-{$target_id}";
+
+            if ($current_user_id > $target_id) {
+                $hash = "{$target_id}-{$current_user_id}";
+            }
+
+            return compact('hash');
         }
 
-        $current_user_id = get_current_user_id();
-        $target_id = $hash_id;
-
-        $hash = "{$current_user_id}-{$target_id}";
-
-        if ($current_user_id > $target_id) {
-            $hash = "{$target_id}-{$current_user_id}";
-        }
-
-        return $hash;
+        return [
+            'id' => $url
+        ];
     }
 
     public function get_conversation($request)
@@ -105,14 +111,14 @@ class Rest
         $params = $request->get_params();
 
         if (isset($params['hash'])) {
-            $hash = $this->urlToHash($params['hash']);
-            $params['hash'] = $hash;
+            $params = $this->get_search_params($params['hash']);
         }
 
-        $conversation = Conversation::find([
-            'hash' => $params['hash'],
-            'withs' => ['peers'],
+        $find_params = array_merge($params, [
+            'withs' => ['peers']
         ]);
+
+        $conversation = Conversation::find($find_params);
 
         return new \WP_REST_Response($conversation, 200);
     }

@@ -28,6 +28,9 @@ class Conversation
             }
 
             $conversation->recipient = $recipient;
+
+            $conversation->avatar = $conversation->avatar ?? $recipient->avatar;
+            $conversation->title = $conversation->title ?? $recipient->name;
         }
 
         $conversation->meta = json_decode($conversation->meta, true);
