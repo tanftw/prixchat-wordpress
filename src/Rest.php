@@ -108,7 +108,9 @@ class Rest
             $params['hash'] = $hash;
         }
 
-        $conversation = Conversation::find($params);
+        $conversation = Conversation::find([
+            'hash' => $params['hash']
+        ]);
 
         return new \WP_REST_Response($conversation, 200);
     }

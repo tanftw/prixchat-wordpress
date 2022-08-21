@@ -4,28 +4,34 @@ namespace Heave\PrixChat;
 
 class Conversation
 {
-    private static function normalize($conversation, $withs = [])
+    private static function normalize($conversation, $args)
     {
         $my_id = get_current_user_id();
 
-        if (!empty($conversation->peers)) {
-            $conversation->peers = json_decode($conversation->peers, true);
-        }
+        if (isset($args['withs']) && is_array($args['withs']) && in_array('peers', $args['withs'])) {
+            $peers = Peer::get([
+                'conversation_id' => $conversation->id,
+            ]);
 
-        $recipient = [];
-        foreach ($conversation->peers as $user_id => $peer) {
-            if ($user_id !== $my_id) {
+            $conversation->peers = $peers;
+            
+            // @todo: Check recipient if it's a DM conversation
+            $recipient = [];
+            foreach ($conversation->peers as $id => $peer) {
+                if ($peer->id !== $my_id) {
+                    $recipient = $peer;
+                }
+            }
+
+            if (empty($recipient)) {
                 $recipient = $peer;
             }
+
+            $conversation->recipient = $recipient;
         }
 
-        if (empty($recipient)) {
-            $recipient = $peer;
-        }
-
-        $conversation->recipient = $recipient;
         $conversation->meta = json_decode($conversation->meta, true);
-
+        
         return $conversation;
     }
 
@@ -53,7 +59,7 @@ class Conversation
             return [];
         }
 
-        return self::normalize($conversation, $args['withs'] ?? []);
+        return self::normalize($conversation, $args);
     }
 
     public static function create($data)
@@ -80,29 +86,22 @@ class Conversation
         ]);
     }
 
-    public static function set_last_seen($conversation_id)
+    public static function get($args = [])
     {
         global $wpdb;
 
-        $now = current_datetime()->format('Y-m-d H:i:s');
+        $prepare  = [];
+        $query = "SELECT * FROM {$wpdb->prefix}prix_chat_conversations WHERE 1 = 1";
 
-        $conversation = self::find([
-            'id' => $conversation_id,
-        ]);
-
-        if (!$conversation) {
-            return;
+        if (isset($args['in'])) {
+            $query .= " AND id IN (%1s)";
+            $prepare[] = $args['in'];
         }
 
-        $peers = $conversation->peers;
-        $peers[get_current_user_id()]['last_seen'] = $now;
-        $peers = json_encode($peers);
-
-        $wpdb->update($wpdb->prefix . 'prix_chat_conversations', compact('peers'), [
-            'id' => $conversation_id,
-        ]);
-
-        // Update online status of user
-        update_user_meta(get_current_user_id(), 'last_seen', $now);
+        $conversations = $wpdb->get_results($wpdb->prepare($query, $prepare));
+        
+        return array_map(function ($conversation) {
+            return self::normalize($conversation, []);
+        }, $conversations);
     }
 }

@@ -6,20 +6,15 @@ class BroadcastService
 {
     protected $after;
 
-    protected $queue = [];
-
     public $request;
 
     public $chat_service;
 
+    protected $conversations;
+
     public function __construct()
     {
         $this->chat_service = new ChatService();
-    }
-
-    public function add($message)
-    {
-        $this->queue[] = $message;
     }
 
     public function send()
@@ -31,17 +26,18 @@ class BroadcastService
             exit;
         }
 
-        $messages = $this->chat_service->get_messages([
+        $messages = Message::get([
             'after' => $this->after,
             'conversation_id' => $this->request->get_param('conversation_id'),
         ]);
 
-        $conversations = $this->chat_service->get_conversations();
+        $conversations = [];
 
-        // Set last seen every 3 seconds
+        // Set last seen and fetch conversations every 3 seconds
         $second = date('s');
         if ($second % 3 === 0) {
-            Conversation::set_last_seen($conversation_id);
+            $conversations = $this->chat_service->get_conversations();
+            Peer::set_last_seen($conversation_id);
         }
 
         if (count($messages) > 0) {
@@ -51,9 +47,8 @@ class BroadcastService
                 'messages',
                 'conversations',
             ]));
-            
+
             echo "data: {$json}\n\n";
-          
         } else {
             echo "data: ping\n\n";
         }

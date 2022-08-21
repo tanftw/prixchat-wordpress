@@ -14,87 +14,14 @@ class ChatService
         }
 
         if ($message['reply_to']) {
-            $message['reply_to_id'] = $message['reply_to']['id'];
-            $message['reply_to']['content'] = esc_html(trim($message['reply_to']['content']));
+            $message['reply_to_id']             = $message['reply_to']['id'];
+            $message['reply_to']['content']     = esc_html(trim($message['reply_to']['content']));
             $message['reply_to'] = json_encode($message['reply_to']);
         }
 
         $message = Message::create($message);
 
         return $message['id'];
-    }
-
-    public function get_messages($args = [])
-    {
-        global $wpdb;
-
-        if (!isset($args['conversation_id'])) {
-            return [];
-        }
-
-        // Get conversation
-        $conversation = Conversation::find([
-            'id' => $args['conversation_id']
-        ]);
-
-        $sqlStr = "SELECT * FROM {$wpdb->prefix}prix_chat_messages WHERE conversation_id = %d";
-
-        if (isset($args['after'])) {
-            $sqlStr .= " AND id > %d";
-        }
-
-        if (isset($args['before'])) {
-            $sqlStr .= " AND id < %d";
-        }
-
-        $sqlStr .= " ORDER BY id DESC LIMIT 15";
-
-        $beforeAfter = $args['before'] ?? $args['after'] ?? 0;
-
-        $query = $wpdb->prepare(
-            $sqlStr,
-            $args['conversation_id'],
-            $beforeAfter
-        );
-
-        $messages = $wpdb->get_results($query);
-
-        // Format messages for display in the chat
-        $messages = array_map(function ($message) use ($conversation) {
-            return $this->format_message($message, $conversation);
-        }, $messages);
-
-        return $messages;
-    }
-
-    public function format_message($message, $conversation)
-    {
-        $peers = $conversation->peers;
-
-        $message->conversation = $conversation;
-        $message->content = nl2br($message->content);
-        $message->reactions = $message->reactions ? json_decode($message->reactions, true) : [];
-
-        if (!empty($message->reactions)) {
-            $message->reactions = array_map(function ($reaction) use ($peers) {
-                return array_map(function ($peer) use ($peers) {
-                    $peer['peer'] = $peers[$peer['peer_id']];
-
-                    return $peer;
-                }, $reaction);
-
-                return $reaction;
-            }, $message->reactions);
-        }
-
-        if ($message->reply_to) {
-            $message->reply_to = json_decode($message->reply_to);
-        }
-
-        $message->sender = $peers[$message->sender_id] ?? [];
-        // $message->created_at = date('Y-m-d H:i:s', strtotime($message->created_at));
-
-        return $message;
     }
 
     public function create_conversation($hash)
@@ -153,13 +80,17 @@ class ChatService
         global $wpdb;
 
         $me = wp_get_current_user();
+        $conversations = [];
+        $exclude = [];
+
         $current_user_conversations_ids = Peer::get_conversation_ids();
         // Convert $current_user_conversations_ids to a comma separated string
         $current_user_conversations_ids = implode(',', $current_user_conversations_ids);
 
-        // Get all conversations with last message
-        $conversations = $wpdb->get_results(
-            $wpdb->prepare("SELECT 
+        if (!empty($current_user_conversations_ids)) {
+            // Get all conversations with last message
+            $conversations = $wpdb->get_results(
+                $wpdb->prepare("SELECT 
                 C.id, 
                 meta, 
                 peers, 
@@ -188,52 +119,71 @@ class ChatService
             AND 
                 `M`.`conversation_id` = C.id
             AND C.id IN (%1s)
-            ", $current_user_conversations_ids)
-        );
+            ORDER BY last_message_at DESC", $current_user_conversations_ids)
+            );
 
-        $exclude = [];
+            // Get Peer data for each conversation
+            $peers = Peer::get([
+                'in_conversation_id' => $current_user_conversations_ids,
+            ]);
 
-        // Format conversations for display in the chat
-        foreach ($conversations as $id => $conversation) {
-            $peers = json_decode($conversation->peers, true);
+            // Format $peers, key by conversation_id
+            $peers_by_conversation_id = [];
 
-            $last_message_sender = [];
+            foreach ($peers as $peer) {
+                if (!isset($peers_by_conversation_id[$peer->conversation_id])) {
+                    $peers_by_conversation_id[$peer->conversation_id] = [];
+                }
 
-            $recipient = [];
-            if (is_array($peers) && count($peers) > 0) {
-                foreach ($peers as $user_id => $peer) {
-                    if ($user_id == $conversation->last_message_sender_id) {
-                        $last_message_sender = $peer;
-                    }
-                    if ($user_id != $me->ID) {
-                        $recipient = $peer;
-                    }
+                $peers_by_conversation_id[$peer->conversation_id][] = $peer;
+            }
 
-                    if ($conversation->type == 'dm') {
-                        $conversation->id = '@' . $user_id;
-                        $exclude[] = $user_id;
+            $unread_count = Peer::get_unread_count($me->ID);
+
+            // Format conversations for display in the chat
+            foreach ($conversations as $id => $conversation) {
+                $peers = $peers_by_conversation_id[$conversation->id];
+
+                $last_message_sender = [];
+
+                $recipient = [];
+                if (is_array($peers) && count($peers) > 0) {
+                    foreach ($peers as $peer) {
+                        if ($peer->user_id == $conversation->last_message_sender_id) {
+                            $last_message_sender = $peer;
+                        }
+
+                        if ($peer->user_id != $me->ID) {
+                            $recipient = $peer;
+                        }
+
+                        if ($conversation->type == 'dm') {
+                            $conversation->id = '@' . $peer->user_id;
+                            $exclude[] = $peer->user_id;
+                        }
                     }
                 }
+
+                if (empty($recipient)) {
+                    $recipient = $last_message_sender;
+                }
+
+                $conversation->messages = [
+                    [
+                        'type'          => $conversation->last_message_type,
+                        'content'       => $conversation->last_message_content,
+                        'sender_id'     => $conversation->last_message_sender_id,
+                        'sender'        => $last_message_sender,
+                        'created_at'    => $conversation->last_message_at,
+                    ],
+                ];
+
+                $conversation->peers = $peers;
+                $conversation->meta = json_decode($conversation->meta);
+                $conversation->recipient = $recipient;
+                $conversation->unread_count = $unread_count[$conversation->id] ?? 0;
+                $conversations[$id] = $conversation;
             }
-
-            if (empty($recipient)) {
-                $recipient = $last_message_sender;
-            }
-
-            $conversation->messages = [
-                [
-                    'type'          => $conversation->last_message_type,
-                    'content'       => $conversation->last_message_content,
-                    'sender_id'     => $conversation->last_message_sender_id,
-                    'sender'        => $last_message_sender,
-                    'created_at'    => $conversation->last_message_at,
-                ],
-            ];
-
-            $conversation->peers = $peers;
-            $conversation->meta = json_decode($conversation->meta);
-            $conversation->recipient = $recipient;
-            $conversations[$id] = $conversation;
         }
 
         // Users as empty conversations
@@ -257,6 +207,7 @@ class ChatService
                 'messages' => [],
                 'title' => $user['name'],
                 'avatar' => $user['avatar'],
+                'recipient' => $user,
             ];
         }
 
