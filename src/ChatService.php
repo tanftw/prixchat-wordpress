@@ -173,16 +173,17 @@ class ChatService
                     ],
                 ];
 
-                $conversation->url = $conversation->id;
-                $conversation->peers = $peers;
-                $conversation->meta = json_decode($conversation->meta);
-                $conversation->recipient = $recipient;
+                $conversation->url          = $conversation->id;
+                $conversation->peers        = $peers;
+                $conversation->meta         = json_decode($conversation->meta);
+                $conversation->recipient    = $recipient;
                 $conversation->unread_count = $unread_count[$conversation->id] ?? 0;
-                $conversation->avatar = $conversation->avatar ?? $recipient->avatar;
-                $conversation->title = $conversation->title ?? $recipient->name;
+                $conversation->avatar       = $conversation->avatar ?? $recipient->avatar;
+                $conversation->title        = $conversation->title ?? $recipient->name;
+
                 // Limit the size of $conversation->title
-                $conversation->title = substr($conversation->title, 0, 20);
-                $conversations[$id] = $conversation;
+                $conversation->title        = substr($conversation->title, 0, 20);
+                $conversations[$id]         = $conversation;
             }
         }
 

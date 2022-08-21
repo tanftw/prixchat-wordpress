@@ -73,7 +73,7 @@ class Peer
         if (isset($data['user_id'])) {
             $user_id = intval($data['user_id']);
             $user = get_user_by('id', $user_id);
-            
+
             if (!$user) {
                 return new \WP_Error('invalid_user_id', 'Invalid user ID');
             }
@@ -95,7 +95,7 @@ class Peer
     {
         global $wpdb;
 
-        $wpdb->update($wpdb->prefix . 'prix_chat_peers', $data, $conditions);   
+        $wpdb->update($wpdb->prefix . 'prix_chat_peers', $data, $conditions);
     }
 
     public static function get_unread_count($user_id)
@@ -114,6 +114,10 @@ class Peer
                 GROUP BY P.conversation_id";
 
         $unread_count = $wpdb->get_results($wpdb->prepare($query, $user_id), OBJECT_K);
+
+        $unread_count = array_map(function ($count) {
+            return intval($count->total_unread);
+        }, $unread_count);
 
         return $unread_count;
     }

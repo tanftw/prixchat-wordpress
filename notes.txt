@@ -1,4 +1,4 @@
-- New messages badge on admin menu
+- Total unread count badge on admin menu
 - Remove tailwind and use normal CSS instead
 - Styling for bubble
 - Typing indicator: need test
@@ -6,6 +6,6 @@
 - Delete whole conversation
 - Search
 - Highlight conversations with new messages, just need to compare with old one and add isHighlight:1, can compare on frontend or backend.
-
-
+- No new messages alert when scrolling up
+- Fix: Reactions aren't reactive
 - Important: Mock data and stress test
