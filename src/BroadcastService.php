@@ -37,7 +37,6 @@ class BroadcastService
         }
 
         $messages = Message::get([
-            'after' => $this->after,
             'conversation_id' => $this->request->get_param('conversation_id'),
         ]);
 
@@ -57,8 +56,7 @@ class BroadcastService
 
                 $messages[$index] = $message;
             }
-
-            $this->after = $messages[0]->id;
+            
             $messages = array_reverse($messages);
 
             $response['messages'] = $messages;

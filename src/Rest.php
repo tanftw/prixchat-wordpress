@@ -173,6 +173,8 @@ class Rest
             'conversation_id' => $message->conversation_id,
         ]);
 
+        $peer = reset($peer);
+
         $reaction = trim($data['reaction']);
 
         $reactions = json_decode($message->reactions, true);
@@ -182,7 +184,7 @@ class Rest
         }
 
         $reactions[$reaction][] = [
-            'peer_id' => $peer[0]->id,
+            'peer_id' => $peer->id,
             'reacted_at' => date('Y-m-d H:i:s'),
         ];
 
