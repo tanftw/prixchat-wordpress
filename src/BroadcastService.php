@@ -28,22 +28,40 @@ class BroadcastService
 
         $response = [];
 
-        $messages = Message::get([
-            'after' => $this->after,
-            'conversation_id' => $this->request->get_param('conversation_id'),
-        ]);
-
-        if ($messages) {
-            $response['messages'] = array_reverse($messages);
-            $this->after = $messages[0]->id;
-        }
-
         $peers = Peer::get([
             'conversation_id' => $conversation_id,
         ]);
 
         if ($peers) {
             $response['peers'] = $peers;
+        }
+
+        $messages = Message::get([
+            'after' => $this->after,
+            'conversation_id' => $this->request->get_param('conversation_id'),
+        ]);
+
+        // Add seens to messages
+        if ($messages) {
+            foreach ($messages as $index => $message) {
+                foreach ($peers as $id => $peer) {
+                    if ($peer->last_seen >= $message->created_at) {
+                        if (empty($message->seens)) {
+                            $message->seens = [];
+                        }
+
+                        $message->seens[] = $peer;
+                        unset($peers[$id]);
+                    }
+                }
+
+                $messages[$index] = $message;
+            }
+
+            $this->after = $messages[0]->id;
+            $messages = array_reverse($messages);
+
+            $response['messages'] = $messages;
         }
 
         // Set last seen and fetch conversations every 5 seconds
@@ -59,7 +77,6 @@ class BroadcastService
         }
 
         if (!empty($response)) {
-            
             $json = json_encode($response);
 
             echo "data: {$json}\n\n";

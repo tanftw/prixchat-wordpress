@@ -12,11 +12,12 @@ Text Domain: heave
 
 // Prevent loading this file directly
 if (!defined('ABSPATH')) {
-    exit;
+    wp_die(__('Please do not load this file directly. Thanks!', 'heave'));
 }
 
+// This plugin require PHP > 7.0
 if (version_compare(PHP_VERSION, '7.0.0', '<')) {
-    die(__('I need at least PHP 7.0 to run properly!', 'heave'));
+    wp_die(__('I need at least PHP 7.0 to run properly!', 'heave'));
 }
 
 require_once __DIR__ . '/vendor/autoload.php';

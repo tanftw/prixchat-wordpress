@@ -168,6 +168,11 @@ class Rest
             ], 404);
         }
 
+        $peer = Peer::get([
+            'user_id' => get_current_user_id(),
+            'conversation_id' => $message->conversation_id,
+        ]);
+
         $reaction = trim($data['reaction']);
 
         $reactions = json_decode($message->reactions, true);
@@ -177,7 +182,7 @@ class Rest
         }
 
         $reactions[$reaction][] = [
-            'peer_id' => get_current_user_id(),
+            'peer_id' => $peer[0]->id,
             'reacted_at' => date('Y-m-d H:i:s'),
         ];
 

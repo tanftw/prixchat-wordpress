@@ -76,7 +76,7 @@ class Message
             $sqlStr .= " AND id < %d";
         }
 
-        $sqlStr .= " ORDER BY id DESC LIMIT 15";
+        $sqlStr .= " ORDER BY id DESC LIMIT 20";
 
         $beforeAfter = $args['before'] ?? $args['after'] ?? 0;
 
@@ -107,7 +107,7 @@ class Message
         if (!empty($message->reactions)) {
             $message->reactions = array_map(function ($reaction) use ($peers) {
                 return array_map(function ($peer) use ($peers) {
-                    $peer['peer'] = $peers[$peer['peer_id']];
+                    $peer['peer'] = $peers[$peer['peer_id']] ?? [];
 
                     return $peer;
                 }, $reaction);
