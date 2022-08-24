@@ -4,5 +4,3 @@
 - Search
 - No new messages alert when scrolling up
 - Important: Mock data and stress test
-- Fix infinite scrolling
-- Online status use online status instead of last seen

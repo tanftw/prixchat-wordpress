@@ -43,12 +43,9 @@ class BroadcastService
         // Add seens to messages
         if ($messages) {
             foreach ($messages as $index => $message) {
+                $message->seens = [];
                 foreach ($peers as $id => $peer) {
                     if ($peer->last_seen >= $message->created_at) {
-                        if (empty($message->seens)) {
-                            $message->seens = [];
-                        }
-
                         $message->seens[] = $peer;
                         unset($peers[$id]);
                     }
