@@ -1,8 +1,8 @@
 - Total unread count badge on admin menu
 - Remove tailwind and use normal CSS instead
-- Delete Messages
 - Delete whole conversation
 - Search
 - No new messages alert when scrolling up
 - Important: Mock data and stress test
 - Fix infinite scrolling
+- Online status use online status instead of last seen

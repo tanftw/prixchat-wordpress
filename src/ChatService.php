@@ -86,40 +86,40 @@ class ChatService
         if (!empty($current_user_conversations_ids)) {
             $prepare[] = $current_user_conversations_ids;
             $query = "SELECT 
-            C.id, 
-            meta, 
-            peers, 
-            status,
-            hash,
-            content, 
-            peer_id, 
-            title, 
-            C.type as type, 
-            C.avatar as avatar,
-            M.created_at as last_message_at,
-            M.content as last_message_content,
-            M.peer_id as last_message_peer_id,
-            M.type as last_message_type
-        FROM 
-            `wp_prix_chat_conversations` C, 
-            `wp_prix_chat_messages` M 
-        WHERE 
-            M.id IN(
-                SELECT 
-                    MAX(id) as last_id 
-                FROM 
-                    `wp_prix_chat_messages` G 
-                WHERE (
-                    deleted_at IS NULL
-                    OR
-                    deleted_for <> peer_id
-                )
-                GROUP BY conversation_id
-            ) 
-        AND 
-            `M`.`conversation_id` = C.id
-        AND C.id IN (%1s)
-        ORDER BY last_message_at DESC";
+                C.id, 
+                meta, 
+                peers, 
+                status,
+                hash,
+                content, 
+                peer_id, 
+                title, 
+                C.type as type, 
+                C.avatar as avatar,
+                M.created_at as last_message_at,
+                M.content as last_message_content,
+                M.peer_id as last_message_peer_id,
+                M.type as last_message_type
+            FROM 
+                `wp_prix_chat_conversations` C, 
+                `wp_prix_chat_messages` M 
+            WHERE 
+                M.id IN(
+                    SELECT 
+                        MAX(id) as last_id 
+                    FROM 
+                        `wp_prix_chat_messages` G 
+                    WHERE (
+                        deleted_at IS NULL
+                        OR
+                        deleted_for <> peer_id
+                    )
+                    GROUP BY conversation_id
+                ) 
+            AND 
+                `M`.`conversation_id` = C.id
+            AND C.id IN (%1s)
+            ORDER BY last_message_at DESC";
 
             // Get all conversations with last message
             $conversations = $wpdb->get_results(
@@ -129,8 +129,9 @@ class ChatService
             // Get Peer data for each conversation
             $peers = Peer::get([
                 'in_conversation_id' => $current_user_conversations_ids,
-            ]);
+            ]);            
 
+            $last_online = [];
             // Format $peers, key by conversation_id
             $peers_by_conversation_id = [];
 
@@ -140,6 +141,12 @@ class ChatService
                 }
 
                 $peers_by_conversation_id[$peer->conversation_id][] = $peer;
+
+                if (isset($last_online[$peer->user_id])) {
+                    $last_online[$peer->user_id] = max($last_online[$peer->user_id], $peer->last_seen);
+                } else {
+                    $last_online[$peer->user_id] = $peer->last_seen;
+                }
             }
 
             $unread_count = Peer::get_unread_count($me->ID);
@@ -154,6 +161,7 @@ class ChatService
 
                 if (is_array($peers) && count($peers) > 0) {
                     foreach ($peers as $peer) {
+                        $peer->last_online = $last_online[$peer->user_id];
                         if ($peer->id == $conversation->last_message_peer_id) {
                             $last_message_sender = $peer;
                         }

@@ -142,7 +142,7 @@ class Rest
 
     public function get_messages($request)
     {
-        $messages = $this->chat_service->get_messages([
+        $messages = Message::get([
             'before' => $request->get_param('before'),
             'conversation_id' => $request->get_param('conversation_id'),
         ]);
