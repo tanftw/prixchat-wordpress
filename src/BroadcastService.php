@@ -56,7 +56,7 @@ class BroadcastService
 
                 $messages[$index] = $message;
             }
-            
+
             $messages = array_reverse($messages);
 
             $response['messages'] = $messages;

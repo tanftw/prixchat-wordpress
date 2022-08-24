@@ -58,6 +58,12 @@ class Rest
             'permission_callback' => '__return_true',
         ]);
 
+        register_rest_route('prix-chat/v1', '/messages', [
+            'methods' => 'DELETE',
+            'callback' => [$this, 'delete_message'],
+            'permission_callback' => '__return_true',
+        ]);
+
         register_rest_route('prix-chat/v1', '/reactions', [
             'methods' => 'POST',
             'callback' => [$this, 'toggle_reaction'],
@@ -225,6 +231,56 @@ class Rest
             'conversation_id' => $conversation->id,
             'user_id' => get_current_user_id(),
         ]);
+
+        return new \WP_REST_Response([
+            'status' => 'ok',
+        ], 200);
+    }
+
+    public function delete_message($request)
+    {
+        global $wpdb;
+
+        $data = $request->get_params();
+
+        if (!isset($data['id'])) {
+            return new \WP_REST_Response([
+                'message' => 'Message id is required',
+            ], 400);
+        }
+
+        $delete_for_every_one = $data['delete_for_everyone'] ?? false;
+      
+        $user_id = get_current_user_id();
+
+        $message = Message::find([
+            'id' => $data['id'],
+        ]);
+
+        if (!$message) {
+            return new \WP_REST_Response([
+                'message' => 'Message not found',
+            ], 404);
+        }
+
+        if ($message->user_id != $user_id) {
+            return new \WP_REST_Response([
+                'message' => 'You can not delete this message',
+            ], 403);
+        }
+
+        $where = [
+            'id' => $data['id'],
+        ];
+
+        if ($delete_for_every_one) {
+            $wpdb->delete($wpdb->prefix . 'prix_chat_messages', $where);
+        } else {
+            $wpdb->update($wpdb->prefix . 'prix_chat_messages', [
+                'deleted_at' => wp_date('Y-m-d H:i:s'),
+                'deleted_for' => $message->peer_id,
+            ], $where);
+        }
 
         return new \WP_REST_Response([
             'status' => 'ok',

@@ -66,28 +66,25 @@ class Message
             'withs' => ['peers']
         ]);
 
-        $sqlStr = "SELECT * FROM {$wpdb->prefix}prix_chat_messages WHERE conversation_id = %d";
+        $prepare = [];
+        $query = "SELECT * FROM {$wpdb->prefix}prix_chat_messages WHERE conversation_id = %d AND (deleted_at IS NULL OR deleted_for <> peer_id)";
+        
+        $prepare[] = $args['conversation_id'];
 
         if (isset($args['after'])) {
-            $sqlStr .= " AND id > %d";
+            $query .= " AND id > %d";
+            $prepare[] = $args['after'];
         }
 
         if (isset($args['before'])) {
-            $sqlStr .= " AND id < %d";
+            $query .= " AND id < %d";
+            $prepare[] = $args['before'];
         }
 
-        $sqlStr .= " ORDER BY id DESC LIMIT 20";
+        $query .= " ORDER BY id DESC LIMIT 20";
 
-        $beforeAfter = $args['before'] ?? $args['after'] ?? 0;
-
-        $query = $wpdb->prepare(
-            $sqlStr,
-            $args['conversation_id'],
-            $beforeAfter
-        );
-
-        $messages = $wpdb->get_results($query);
-
+        $messages = $wpdb->get_results($wpdb->prepare($query, $prepare));
+        
         // Format messages for display in the chat
         $messages = array_map(function ($message) use ($conversation) {
             return self::normalize($message, $conversation);
@@ -120,7 +117,7 @@ class Message
             $message->reply_to = json_decode($message->reply_to);
         }
 
-        $message->sender = $peers[$message->peer_id] ?? [];
+        $message->peer = $peers[$message->peer_id] ?? [];
 
         // $message->created_at = date('Y-m-d H:i:s', strtotime($message->created_at));
 

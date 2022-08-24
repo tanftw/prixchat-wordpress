@@ -81,40 +81,49 @@ class ChatService
 
         // Convert $current_user_conversations_ids to a comma separated string
         $current_user_conversations_ids = implode(',', $current_user_conversations_ids);
+        $prepare = [];
 
         if (!empty($current_user_conversations_ids)) {
+            $prepare[] = $current_user_conversations_ids;
+            $query = "SELECT 
+            C.id, 
+            meta, 
+            peers, 
+            status,
+            hash,
+            content, 
+            peer_id, 
+            title, 
+            C.type as type, 
+            C.avatar as avatar,
+            M.created_at as last_message_at,
+            M.content as last_message_content,
+            M.peer_id as last_message_peer_id,
+            M.type as last_message_type
+        FROM 
+            `wp_prix_chat_conversations` C, 
+            `wp_prix_chat_messages` M 
+        WHERE 
+            M.id IN(
+                SELECT 
+                    MAX(id) as last_id 
+                FROM 
+                    `wp_prix_chat_messages` G 
+                WHERE (
+                    deleted_at IS NULL
+                    OR
+                    deleted_for <> peer_id
+                )
+                GROUP BY conversation_id
+            ) 
+        AND 
+            `M`.`conversation_id` = C.id
+        AND C.id IN (%1s)
+        ORDER BY last_message_at DESC";
+
             // Get all conversations with last message
             $conversations = $wpdb->get_results(
-                $wpdb->prepare("SELECT 
-                C.id, 
-                meta, 
-                peers, 
-                status,
-                hash,
-                content, 
-                peer_id, 
-                title, 
-                C.type as type, 
-                C.avatar as avatar,
-                M.created_at as last_message_at,
-                M.content as last_message_content,
-                M.peer_id as last_message_peer_id,
-                M.type as last_message_type
-            FROM 
-                `wp_prix_chat_conversations` C, 
-                `wp_prix_chat_messages` M 
-            WHERE 
-                M.id IN(
-                    SELECT 
-                        MAX(id) as last_id 
-                    FROM 
-                        `wp_prix_chat_messages` G 
-                    GROUP BY conversation_id
-                ) 
-            AND 
-                `M`.`conversation_id` = C.id
-            AND C.id IN (%1s)
-            ORDER BY last_message_at DESC", $current_user_conversations_ids)
+                $wpdb->prepare($query, $prepare)
             );
 
             // Get Peer data for each conversation
@@ -168,7 +177,7 @@ class ChatService
                         'type'          => $conversation->last_message_type,
                         'content'       => substr($conversation->last_message_content, 0, 25),
                         'peer_id'       => $conversation->last_message_peer_id,
-                        'sender'        => $last_message_sender,
+                        'peer'          => $last_message_sender,
                         'created_at'    => $conversation->last_message_at,
                     ],
                 ];
