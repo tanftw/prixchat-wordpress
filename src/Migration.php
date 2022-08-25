@@ -113,7 +113,14 @@ class Migration
      */
     public static function down()
     {
-        // Do nothing for now
+        global $wpdb;
+
+        $wpdb->query('DROP TABLE IF EXISTS ' . $wpdb->prefix . 'prix_chat_conversations');
+        $wpdb->query('DROP TABLE IF EXISTS ' . $wpdb->prefix . 'prix_chat_messages');
+        $wpdb->query('DROP TABLE IF EXISTS ' . $wpdb->prefix . 'prix_chat_peers');
+
+        delete_option('prix_chat_db_version');
+        delete_option('prix_chat_settings');
     }
 }
 

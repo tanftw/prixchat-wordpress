@@ -44,9 +44,14 @@ class BroadcastService
         if ($messages) {
             foreach ($messages as $index => $message) {
                 $message->seens = [];
+                $added = [];
                 foreach ($peers as $id => $peer) {
                     if ($peer->last_seen >= $message->created_at) {
-                        $message->seens[] = $peer;
+                        if (!in_array($peer->id, $added)) {
+                            $message->seens[] = $peer;
+                            $added[] = $id;
+                        }
+
                         unset($peers[$id]);
                     }
                 }
@@ -61,7 +66,6 @@ class BroadcastService
 
         Peer::set_last_seen($conversation_id);
 
-        
         $second = date('s');
 
         // Fetch new conversations every 3 seconds to reduce server load

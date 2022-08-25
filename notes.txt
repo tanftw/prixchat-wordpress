@@ -1,5 +1,4 @@
 - Test: Delete whole conversation
 - Important: Mock data and stress test
 - Conversations on sidebar doesn't update
-- Fix: Typing indicator
 - Double seens avatar

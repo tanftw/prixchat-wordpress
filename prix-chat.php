@@ -7,17 +7,18 @@ Version: 0.0.1
 Author: Heave
 Author URI: https://heave.app/
 License: GPLv2 or later
-Text Domain: heave
+Text Domain: prix-chat
+Domain Path: /languages
 */
 
 // Prevent loading this file directly
 if (!defined('ABSPATH')) {
-    wp_die(__('Please do not load this file directly. Thanks!', 'heave'));
+    wp_die(__('Please do not load this file directly. Thanks!', 'prix-chat'));
 }
 
 // This plugin require PHP > 7.0
 if (version_compare(PHP_VERSION, '7.0.0', '<')) {
-    wp_die(__('I need at least PHP 7.0 to run properly!', 'heave'));
+    wp_die(__('I need at least PHP 7.0 to run properly!', 'prix-chat'));
 }
 
 require_once __DIR__ . '/vendor/autoload.php';
@@ -33,3 +34,15 @@ if (is_admin()) {
 
 new Heave\PrixChat\Rest;
 new Heave\PrixChat\SSE;
+
+// Make sure we leave nothing after uninstalled
+register_activation_hook(__FILE__, function () {
+    register_uninstall_hook(__FILE__, function () {
+        \Heave\PrixChat\Migration::down();
+    });
+});
+
+// Clean up after deactivation
+register_deactivation_hook(__FILE__, function () {
+    wp_clear_scheduled_hook('prix_chat_clear_cache');
+});

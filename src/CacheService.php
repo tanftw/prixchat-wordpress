@@ -5,8 +5,12 @@ class CacheService
 {
     public function __construct()
     {
-        // Update cache daily
-        // add_action('admin_init', [$this, 'update_peers_cache']);
+        // Register wp cronjob for clearing cache every day
+        add_action('prix_chat_clear_cache', [$this, 'clear_cache']);
+        
+        if (!wp_next_scheduled('prix_chat_clear_cache')) {
+            wp_schedule_event(time(), 'daily', 'prix_chat_clear_cache');
+        }
     }
     
     /**
@@ -14,7 +18,7 @@ class CacheService
      * 
      * @return void
      */
-    public function update_peers_cache()
+    public function clear_cache()
     {
         global $wpdb;
         
@@ -22,8 +26,8 @@ class CacheService
 
         $user_peers = [];
         $when_then = [];
-        $when_then_conversations = [];
-        
+        $prepare = [];
+
         foreach ($users as $user) {
             $peer = [
                 'user_id' => $user->ID,
@@ -32,31 +36,14 @@ class CacheService
             ];
 
             $user_peers[$user->ID] = $peer;
-            $when_then[] = $wpdb->prepare("WHEN user_id = %d THEN %s ", $peer['user_id'], $peer['avatar']);
+            $when_then[] = "WHEN user_id = %d THEN %s ";
+            $prepare[] = $peer['user_id'];
+            $prepare[] = $peer['avatar'];
         }
 
         $case = '(CASE ' . implode(' ', $when_then) . ' END)';
         $sql = "UPDATE {$wpdb->prefix}prix_chat_peers SET avatar = $case";
-
-        $conversations = $wpdb->get_results("SELECT * FROM wp_prix_chat_conversations");
-
-        foreach ($conversations as $conversation) {
-            $peers = json_decode($conversation->peers, true);
-
-            $peers = array_map(function ($peer) use ($user_peers) {
-                if (isset($user_peers[$peer['user_id']])) {
-                    return array_merge($peer, $user_peers[$peer['user_id']]);
-                }
-
-                return $peer;
-            }, $peers);
-
-            $when_then_conversations[] = $wpdb->prepare("WHEN id = %d THEN %s ", $conversation->id, json_encode($peers));
-        }
-        $case_conversation = '(CASE ' . implode(' ', $when_then_conversations) . ' END)';
-        $sql_conversation = "UPDATE {$wpdb->prefix}prix_chat_conversations SET peers = $case_conversation";
-
-        $wpdb->query($sql);
-        $wpdb->query($sql_conversation);
+        
+        $wpdb->query($wpdb->prepare($sql, $prepare));
     }
 }

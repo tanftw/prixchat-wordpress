@@ -5,7 +5,6 @@ namespace Heave\PrixChat;
 class Rest
 {
     private $chat_service;
-    private $broadcast_service;
 
     public function __construct()
     {
@@ -164,7 +163,7 @@ class Rest
 
         if (!isset($data['message_id'])) {
             return new \WP_REST_Response([
-                'message' => 'Message id is required',
+                'message' => __('Message id is required', 'prix-chat'),
             ], 400);
         }
 
@@ -174,7 +173,7 @@ class Rest
 
         if (!$message) {
             return new \WP_REST_Response([
-                'message' => 'Message not found',
+                'message' => __('Message not found', 'prix-chat'),
             ], 404);
         }
 
@@ -223,7 +222,7 @@ class Rest
 
         if (!$conversation) {
             return new \WP_REST_Response([
-                'message' => 'Conversation not found',
+                'message' => __('Conversation not found', 'prix-chat'),
             ], 404);
         }
 
@@ -249,7 +248,7 @@ class Rest
 
         if (!isset($data['id'])) {
             return new \WP_REST_Response([
-                'message' => 'Message id is required',
+                'message' => __('Message id is required', 'prix-chat'),
             ], 400);
         }
 
@@ -263,13 +262,13 @@ class Rest
 
         if (!$message) {
             return new \WP_REST_Response([
-                'message' => 'Message not found',
+                'message' => __('Message not found', 'prix-chat'),
             ], 404);
         }
 
         if ($message->user_id != $user_id) {
             return new \WP_REST_Response([
-                'message' => 'You can not delete this message',
+                'message' => __('You can not delete this message', 'prix-chat'),
             ], 403);
         }
 
@@ -308,7 +307,7 @@ class Rest
 
         if (!$peer) {
             return new \WP_REST_Response([
-                'message' => 'You are not a member of this conversation',
+                'message' => __('You are not a member of this conversation', 'prix-chat'),
             ], 403);
         }
 
