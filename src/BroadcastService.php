@@ -59,16 +59,17 @@ class BroadcastService
             $response['messages'] = $messages;
         }
 
-        // Set last seen and fetch conversations every 5 seconds
-        $second = date('s');
-        if ($second % 5 === 0) {
-            $conversations = $this->chat_service->get_conversations();
+        Peer::set_last_seen($conversation_id);
 
+        
+        $second = date('s');
+
+        // Fetch new conversations every 3 seconds to reduce server load
+        if ($second % 3 === 0) {
+            $conversations = $this->chat_service->get_conversations();
             if ($conversations) {
                 $response['conversations'] = $conversations;
             }
-
-            Peer::set_last_seen($conversation_id);
         }
 
         if (!empty($response)) {

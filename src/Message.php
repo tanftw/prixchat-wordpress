@@ -66,10 +66,30 @@ class Message
             'withs' => ['peers']
         ]);
 
+
+        $me_inside = false;
+        $me_peer = null;
+        foreach ($conversation->peers as $peer) {
+            if ($peer->user_id == get_current_user_id()) {
+                $me_peer = $peer;
+                $me_inside = true;
+                break;
+            }
+        }
+
+        if (!$me_inside) {
+            return [];
+        }
+
         $prepare = [];
         $query = "SELECT * FROM {$wpdb->prefix}prix_chat_messages WHERE conversation_id = %d AND (deleted_at IS NULL OR deleted_for <> peer_id)";
-        
+
         $prepare[] = $args['conversation_id'];
+        
+        if ($me_peer && $me_peer->deleted_at) {
+            $query .= " AND created_at > %s";
+            $prepare[] = $me_peer->deleted_at;
+        }
 
         if (isset($args['after'])) {
             $query .= " AND id > %d";

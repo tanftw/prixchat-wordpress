@@ -29,7 +29,7 @@ class ChatService
 
         $message = Message::create($message);
 
-        return $message['id'];
+        return $message;
     }
 
     public function create_conversation($hash)

@@ -40,6 +40,12 @@ class Rest
             'permission_callback' => '__return_true',
         ]);
 
+        register_rest_route('prix-chat/v1', '/conversations', [
+            'methods' => 'DELETE',
+            'callback' => [$this, 'delete_conversation'],
+            'permission_callback' => '__return_true',
+        ]);
+
         register_rest_route('prix-chat/v1', '/conversations/(?P<conversation_id>\d+)', [
             'methods' => 'GET',
             'callback' => [$this, 'get_conversation'],
@@ -133,11 +139,9 @@ class Rest
     {
         $data = $request->get_params();
 
-        $id = $this->chat_service->create_message($data);
+        $message = $this->chat_service->create_message($data);
 
-        return new \WP_REST_Response([
-            'id' => $id,
-        ], 200);
+        return new \WP_REST_Response($message, 200);
     }
 
     public function get_messages($request)
@@ -281,6 +285,40 @@ class Rest
                 'deleted_for' => $message->peer_id,
             ], $where);
         }
+
+        return new \WP_REST_Response([
+            'status' => 'ok',
+        ], 200);
+    }
+
+    /**
+     * Instead of delete from database, we just let peer leave the conversation
+     */
+    public function delete_conversation($request)
+    {
+        global $wpdb;
+        $data = $request->get_params();
+        $user_id = get_current_user_id();
+
+
+        $peer = Peer::get([
+            'user_id' => $user_id,
+            'conversation_id' => $data['id'],
+        ]);
+
+        if (!$peer) {
+            return new \WP_REST_Response([
+                'message' => 'You are not a member of this conversation',
+            ], 403);
+        }
+
+        $peer = reset($peer);
+        
+        $wpdb->update($wpdb->prefix . 'prix_chat_peers', [
+            'deleted_at' => wp_date('Y-m-d H:i:s'),
+        ], [
+            'id' => $peer->id,
+        ]);
 
         return new \WP_REST_Response([
             'status' => 'ok',
