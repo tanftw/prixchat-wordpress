@@ -1,4 +1,5 @@
-- Test: Delete whole conversation
-- Important: Mock data and stress test
-- Conversations on sidebar doesn't update
-- Double seens avatar
+Settings fields:
+
+- Emojis
+- Who can use Prix Chat
+- Fix toolbar available

@@ -137,6 +137,12 @@ class Peer
             'user_id' => $user_id,
         ]);
 
+        $wpdb->update($wpdb->prefix . 'prix_chat_peers', [
+            'last_online' => $now,
+        ], [
+            'user_id' => $user_id,
+        ]);
+
         // Update online status of user
         // update_user_meta(get_current_user_id(), 'last_seen', $now);
     }

@@ -85,7 +85,7 @@ class Message
         $query = "SELECT * FROM {$wpdb->prefix}prix_chat_messages WHERE conversation_id = %d AND (deleted_at IS NULL OR deleted_for <> peer_id)";
 
         $prepare[] = $args['conversation_id'];
-        
+
         if ($me_peer && $me_peer->deleted_at) {
             $query .= " AND created_at > %s";
             $prepare[] = $me_peer->deleted_at;
@@ -104,7 +104,7 @@ class Message
         $query .= " ORDER BY id DESC LIMIT 20";
 
         $messages = $wpdb->get_results($wpdb->prepare($query, $prepare));
-        
+
         // Format messages for display in the chat
         $messages = array_map(function ($message) use ($conversation) {
             return self::normalize($message, $conversation);
@@ -138,8 +138,6 @@ class Message
         }
 
         $message->peer = $peers[$message->peer_id] ?? [];
-
-        // $message->created_at = date('Y-m-d H:i:s', strtotime($message->created_at));
 
         return $message;
     }

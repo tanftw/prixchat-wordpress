@@ -131,7 +131,6 @@ class ChatService
                 'in_conversation_id' => $current_user_conversations_ids,
             ]);            
 
-            $last_online = [];
             // Format $peers, key by conversation_id
             $peers_by_conversation_id = [];
 
@@ -141,12 +140,6 @@ class ChatService
                 }
 
                 $peers_by_conversation_id[$peer->conversation_id][] = $peer;
-
-                if (isset($last_online[$peer->user_id])) {
-                    $last_online[$peer->user_id] = max($last_online[$peer->user_id], $peer->last_seen);
-                } else {
-                    $last_online[$peer->user_id] = $peer->last_seen;
-                }
             }
 
             $unread_count = Peer::get_unread_count($me->ID);
@@ -161,7 +154,6 @@ class ChatService
 
                 if (is_array($peers) && count($peers) > 0) {
                     foreach ($peers as $peer) {
-                        $peer->last_online = $last_online[$peer->user_id];
                         if ($peer->id == $conversation->last_message_peer_id) {
                             $last_message_sender = $peer;
                         }

@@ -8,7 +8,7 @@ namespace Heave\PrixChat;
 class Migration
 {
     // Current database version
-    public static $db_version = '0.2.4';
+    public static $db_version = '0.2.5';
 
     public function __construct()
     {
@@ -72,6 +72,7 @@ class Migration
             meta JSON DEFAULT NULL,
             conversation_id {$nullableInteger},
             last_seen TIMESTAMP NULL DEFAULT NULL,
+            last_online TIMESTAMP NULL DEFAULT NULL,
             last_seen_on INT(11) DEFAULT NULL,
             is_typing TINYINT(1) DEFAULT 0,
             status VARCHAR(10) DEFAULT NULL,

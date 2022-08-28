@@ -24,6 +24,16 @@ class Admin
             'dashicons-format-chat',
             3
         );
+
+        // Add submenu page for settings
+        add_submenu_page(
+            'prix-chat',
+            __('Settings', 'prix-chat'),
+            __('Settings', 'prix-chat'),
+            'edit_posts',
+            'prix-chat-settings',
+            [$this, 'render_settings_page']
+        );
     }
 
     public function enqueue_admin_scripts()
@@ -63,6 +73,21 @@ class Admin
     ?>
         <div class="wrap">
             <div id="root"></div>
+        </div>
+    <?php
+    }
+
+    public function render_settings_page()
+    {
+    ?>
+        <div class="wrap">
+            <h1><?php _e('Settings', 'prix-chat'); ?></h1>
+            <form action="options.php" method="POST">
+                <?php settings_fields('prix-chat-settings'); ?>
+                <?php do_settings_sections('prix-chat-settings'); ?>
+
+                <?php submit_button(); ?>
+            </form>
         </div>
     <?php
     }

@@ -253,7 +253,7 @@ class Rest
         }
 
         $delete_for_every_one = $data['delete_for_everyone'] ?? false;
-      
+
         $user_id = get_current_user_id();
 
         $message = Message::find([
@@ -276,7 +276,7 @@ class Rest
             'id' => $data['id'],
         ];
 
-        if ($delete_for_every_one) {
+        if ($delete_for_every_one == true) {
             $wpdb->delete($wpdb->prefix . 'prix_chat_messages', $where);
         } else {
             $wpdb->update($wpdb->prefix . 'prix_chat_messages', [
@@ -312,7 +312,7 @@ class Rest
         }
 
         $peer = reset($peer);
-        
+
         $wpdb->update($wpdb->prefix . 'prix_chat_peers', [
             'deleted_at' => wp_date('Y-m-d H:i:s'),
         ], [
