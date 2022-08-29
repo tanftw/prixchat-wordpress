@@ -13,6 +13,35 @@ class Peer
         return $peer;
     }
 
+    /**
+     * Get all users with avatar, because it's expensive query (N+1) so we will cache it
+     * with Transient API
+     * 
+     * @return array
+     */
+    public static function get_all_users()
+    {
+        // Retrieve from cache, otherwise, retrieve from database
+        $users = get_transient('prix_chat_users');
+
+        if ($users === false) {
+            $users = get_users();
+
+            $users = array_map(function ($user) {
+                return [
+                    'id' => $user->ID,
+                    'name' => $user->display_name,
+                    'email' => $user->user_email,
+                    'avatar' => get_avatar_url($user->ID),
+                ];
+            }, $users);
+
+            set_transient('prix_chat_users', $users, DAY_IN_SECONDS);
+        }
+
+        return $users;
+    }
+
     public static function find($peer_id, $withs = [])
     {
         global $wpdb;

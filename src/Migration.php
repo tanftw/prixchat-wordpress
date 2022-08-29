@@ -8,7 +8,7 @@ namespace Heave\PrixChat;
 class Migration
 {
     // Current database version
-    public static $db_version = '0.2.5';
+    public static $db_version = '0.2.6';
 
     public function __construct()
     {
@@ -42,8 +42,8 @@ class Migration
 
         $increments      = 'BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT';
         $nullableInteger = 'BIGINT(20) UNSIGNED DEFAULT NULL';
-        $dateTimeColumns = 
-        "created_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        $dateTimeColumns =
+            "created_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
             updated_at timestamp NULL DEFAULT NULL,
             deleted_at timestamp NULL DEFAULT NULL";
         $primaryKeyId = 'PRIMARY KEY  (id)';
@@ -51,12 +51,13 @@ class Migration
         $create_prix_chat_conversations_table = "CREATE TABLE {$prix_chat_conversations} (
             id {$increments},
             type varchar(10) NOT NULL,
-            hash varchar(32) NOT NULL,
+            hash varchar(32) DEFAULT NULL,
             title VARCHAR(255) DEFAULT NULL,
             meta JSON DEFAULT NULL,
             avatar VARCHAR(255) DEFAULT NULL,
             peers JSON DEFAULT NULL,
             status VARCHAR(10) DEFAULT NULL,
+            user_id INT(11) UNSIGNED DEFAULT NULL,
             {$dateTimeColumns},
             {$primaryKeyId},
             UNIQUE KEY hash (hash)
@@ -121,7 +122,7 @@ class Migration
         $wpdb->query('DROP TABLE IF EXISTS ' . $wpdb->prefix . 'prix_chat_peers');
 
         delete_option('prix_chat_db_version');
-        delete_option('prix_chat_settings');
+        // delete_option('prix_chat_settings');
     }
 }
 

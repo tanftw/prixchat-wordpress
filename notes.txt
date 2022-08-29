@@ -1,5 +1,2 @@
-Settings fields:
-
-- Emojis
-- Who can use Prix Chat
-- Fix toolbar available
+Test with no avatar
+Check debug.log

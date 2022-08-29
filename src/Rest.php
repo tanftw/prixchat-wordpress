@@ -51,6 +51,12 @@ class Rest
             'permission_callback' => '__return_true',
         ]);
 
+        register_rest_route('prix-chat/v1', '/conversations/(?P<conversation_id>\d+)/peers', [
+            'methods' => 'POST',
+            'callback' => [$this, 'add_peers'],
+            'permission_callback' => '__return_true',
+        ]);
+
         register_rest_route('prix-chat/v1', '/messages', [
             'methods' => 'GET',
             'callback' => [$this, 'get_messages'],
@@ -321,6 +327,113 @@ class Rest
 
         return new \WP_REST_Response([
             'status' => 'ok',
+        ], 200);
+    }
+
+    public function create_conversation($request)
+    {
+        $data = $request->get_params();
+        $files = $request->get_file_params();
+
+        if (!isset($data['title'])) {
+            return new \WP_REST_Response([
+                'message' => __('Title is required', 'prix-chat'),
+            ], 400);
+        }
+
+        $conversation = [
+            'type' => 'group',
+            'title' => $data['title'],
+        ];
+
+        if (!empty($files) && !empty($files['avatar']['tmp_name'])) {
+            require_once(ABSPATH . 'wp-admin/includes/image.php');
+            require_once(ABSPATH . 'wp-admin/includes/file.php');
+            require_once(ABSPATH . 'wp-admin/includes/media.php');
+
+            $mimes = array(
+                'bmp'  => 'image/bmp',
+                'gif'  => 'image/gif',
+                'jpe'  => 'image/jpeg',
+                'jpeg' => 'image/jpeg',
+                'jpg'  => 'image/jpeg',
+                'png'  => 'image/png',
+                'tif'  => 'image/tiff',
+                'tiff' => 'image/tiff'
+            );
+
+            $overrides = array(
+                'mimes'     => $mimes,
+                'test_form' => false
+            );
+
+            $uploaded = wp_handle_upload($files['avatar'], $overrides);
+            // Uploaded format
+            // {file: File Path, url: URL, type: "image/jpeg"}
+            $conversation['avatar'] = $uploaded['url'];
+        }
+
+        $conversation = Conversation::create($conversation);
+
+        // Add current user to the conversation as the first user
+        Peer::create([
+            'conversation_id' => $conversation['id'],
+            'user_id' => get_current_user_id(),
+        ]);
+
+        return new \WP_REST_Response($conversation, 201);
+    }
+
+    public function add_peers($request)
+    {
+        global $wpdb;
+
+        $conversation_id = $request->get_param('conversation_id');
+        $users = $request->get_param('users');
+
+        if (!$conversation_id) {
+            return new \WP_REST_Response([
+                'message' => __('Conversation id is required', 'prix-chat'),
+            ], 400);
+        }
+
+        if (!$users) {
+            return new \WP_REST_Response([
+                'message' => __('Users is required', 'prix-chat'),
+            ], 400);
+        }
+
+        $peers = array_map(function ($user) use ($conversation_id) {
+            return [
+                'user_id'   => $user['id'],
+                'name'      => $user['name'],
+                'email'     => $user['email'],
+                'conversation_id' => $conversation_id,
+                'is_typing' => false,
+                'avatar' => $user['avatar'],
+            ];
+        }, $users);
+
+        $query = "INSERT INTO {$wpdb->prefix}prix_chat_peers (user_id, name, email, conversation_id, is_typing, avatar) VALUES ";
+        $prepare = [];
+
+        foreach ($peers as $peer) {
+            $query .= ' (%d, %s, %s, %d, %s, %s),';
+            $prepare[] = $peer['user_id'];
+            $prepare[] = $peer['name'];
+            $prepare[] = $peer['email'];
+            $prepare[] = $peer['conversation_id'];
+            $prepare[] = $peer['is_typing'];
+            $prepare[] = $peer['avatar'];
+        }
+
+        $query = rtrim($query, ',');
+
+        $rows_affected = $wpdb->query($wpdb->prepare($query, $prepare));
+
+        return new \WP_REST_Response([
+            'status' => 'ok',
+            'rows_affected' => $rows_affected,
         ], 200);
     }
 }

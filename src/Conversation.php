@@ -74,6 +74,7 @@ class Conversation
 
         $data = array_merge($data, [
             'created_at' => current_time('mysql'),
+            'user_id' => get_current_user_id(),
         ]);
 
         $wpdb->insert($wpdb->prefix . 'prix_chat_conversations', $data);
