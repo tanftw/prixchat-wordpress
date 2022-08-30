@@ -8,7 +8,7 @@ class ChatService
     {
         $message = $data['message'];
         $message['content'] = esc_html(trim($message['content']));
-
+        
         if (!$message['conversation_id']) {
             $message['conversation_id'] = $this->create_conversation($data['url']);
         }
@@ -170,6 +170,12 @@ class ChatService
                 $conversation->peers        = $peers;
                 $conversation->meta         = json_decode($conversation->meta);
 
+                if (str_contains('group', $conversation->type) && empty($conversation->avatar) && count($conversation->peers) > 1) {
+                    $first_two_peers = array_slice($conversation->peers, 0, 2);
+                    $avatars = array_column($first_two_peers, 'avatar');
+                    $conversation->avatar = $avatars;
+                }
+
                 if (!empty($recipient)) {
                     $conversation->recipient    = $recipient;
                     $conversation->avatar       = $conversation->avatar ?? $recipient->avatar;
@@ -194,7 +200,6 @@ class ChatService
         foreach ($users as $user) {
             if (!in_array($user['id'], $exclude)) {
                 $conversations[] = [
-                    'id'            => $user['id'],
                     'type'          => 'dm',
                     'title'         => $user['name'],
                     'avatar'        => $user['avatar'],

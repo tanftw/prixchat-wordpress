@@ -17,7 +17,7 @@ class Admin
         add_menu_page(
             __('Prix Chat', 'prix-chat'),
             __('Prix Chat', 'prix-chat'),
-            'edit_posts',
+            'read',
             'prix-chat',
             [$this, 'render_admin_page'],
             'dashicons-format-chat',

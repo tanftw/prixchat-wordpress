@@ -36,7 +36,7 @@ class Peer
                 ];
             }, $users);
 
-            set_transient('prix_chat_users', $users, DAY_IN_SECONDS);
+            set_transient('prix_chat_users', $users, 5 * MINUTE_IN_SECONDS);
         }
 
         return $users;

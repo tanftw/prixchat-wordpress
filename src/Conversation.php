@@ -29,6 +29,12 @@ class Conversation
 
             $conversation->recipient = $recipient;
 
+            if (str_contains('group', $conversation->type) && empty($conversation->avatar) && count($conversation->peers) > 1) {
+                $first_two_peers = array_slice($conversation->peers, 0, 2);
+                $avatars = array_column($first_two_peers, 'avatar');
+                $conversation->avatar = $avatars;
+            }
+
             $conversation->avatar = $conversation->avatar ?? $recipient->avatar;
             $conversation->title = $conversation->title ?? $recipient->name;
             // Limit the size of $conversation->title
