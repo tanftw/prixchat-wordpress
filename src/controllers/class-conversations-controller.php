@@ -2,7 +2,7 @@
 
 namespace PrixChat\Controllers;
 
-use PrixChat\ChatService;
+use PrixChat\Chat_Service;
 use PrixChat\Conversation;
 use PrixChat\Message;
 use PrixChat\Peer;
@@ -22,7 +22,7 @@ class Conversations_Controller extends Base_Controller
 
     public function get_items($request)
     {
-        $chat_service = new ChatService();
+        $chat_service = new Chat_Service();
         $conversations = $chat_service->get_conversations();
 
         return new \WP_REST_Response($conversations, 200);
@@ -162,7 +162,7 @@ class Conversations_Controller extends Base_Controller
         $data = $request->get_params();
 
         $conversation = Conversation::find([
-            'id' => $data['conversation_id'],
+            'id' => $data['id'],
         ]);
 
         if (!$conversation) {

@@ -2,7 +2,7 @@
 
 namespace PrixChat;
 
-class BroadcastService
+class Broadcast_Service
 {
     protected $after;
 
@@ -14,7 +14,7 @@ class BroadcastService
 
     public function __construct()
     {
-        $this->chat_service = new ChatService();
+        $this->chat_service = new Chat_Service();
     }
 
     public function send()

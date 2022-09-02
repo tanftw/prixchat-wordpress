@@ -2,7 +2,7 @@
 
 namespace PrixChat\Controllers;
 
-use PrixChat\ChatService;
+use PrixChat\Chat_Service;
 use PrixChat\Message;
 use PrixChat\Peer;
 
@@ -84,7 +84,7 @@ class Messages_Controller extends Base_Controller
     public function create_item($request)
     {
         $data = $request->get_params();
-        $chat_service = new ChatService;
+        $chat_service = new Chat_Service;
 
         $message = $chat_service->create_message($data);
 

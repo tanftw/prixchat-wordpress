@@ -1,7 +1,7 @@
 <?php
 namespace PrixChat;
 
-class CacheService
+class Cache_Service
 {
     public function __construct()
     {

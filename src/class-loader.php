@@ -22,13 +22,13 @@ class Loader
             'class-message.php',
             'class-migration.php',
             'class-peer.php',
-            'class-sse.php',
 
             // Load controllers
             'controllers/class-base-controller.php',
             'controllers/class-conversations-controller.php',
             'controllers/class-peers-controller.php',
             'controllers/class-messages-controller.php',
+            'controllers/class-sse-controller.php',
         ];
 
         foreach ($requires as $require) {
@@ -41,12 +41,12 @@ class Loader
         if (is_admin()) {
             new \PrixChat\Migration;
             new \PrixChat\Admin;
-            new \PrixChat\CacheService;
+            new \PrixChat\Cache_Service;
         }
 
-        new \PrixChat\SSE;
         new \PrixChat\Controllers\Conversations_Controller;
         new \PrixChat\Controllers\Peers_Controller;
         new \PrixChat\Controllers\Messages_Controller;
+        new \PrixChat\Controllers\SSE_Controller;
     }
 }

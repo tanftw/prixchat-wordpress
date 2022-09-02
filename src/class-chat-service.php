@@ -2,7 +2,7 @@
 
 namespace PrixChat;
 
-class ChatService
+class Chat_Service
 {
     public function create_message($data)
     {

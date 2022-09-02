@@ -35,7 +35,7 @@ class Admin
         wp_enqueue_script('prix-chat-admin', PRIX_CHAT_URL . '/react-ui/dist/index.js', ['wp-i18n'], wp_rand(), true);
         wp_set_script_translations('prix-chat-admin', 'prix-chat');
 
-        $chat_service = new ChatService();
+        $chat_service = new Chat_Service();
         // Retrieve all users and pass them to scripts
         $conversations = $chat_service->get_conversations();
         $current_user = wp_get_current_user();
