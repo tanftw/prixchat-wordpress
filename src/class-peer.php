@@ -6,6 +6,7 @@ class Peer
 {
     private static function normalize($peer)
     {
+
         if (!empty($peer->meta)) {
             $peer->meta = json_decode($peer->meta, true);
         }
@@ -42,12 +43,23 @@ class Peer
         return $users;
     }
 
-    public static function find($peer_id, $withs = [])
+    public static function find($args)
     {
         global $wpdb;
 
+        $id = $args['id'] ?? null;
+        if (empty($id)) {
+            return null;
+        }
+
         $query = "SELECT * FROM {$wpdb->prefix}prix_chat_peers WHERE id = %d";
-        $peer = $wpdb->get_row($wpdb->prepare($query, $peer_id));
+        $peer = $wpdb->get_row($wpdb->prepare($query, $id));
+
+        if (in_array('conversation', $args['withs'])) {
+            $peer->conversation = Conversation::find([
+                'id' => $peer->conversation_id
+            ]);
+        }
 
         return self::normalize($peer);
     }

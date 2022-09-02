@@ -3,7 +3,7 @@
 namespace PrixChat\Controllers;
 
 use PrixChat\Chat_Service;
-
+use PrixChat\Peer;
 class Peers_Controller extends Base_Controller
 {
     public function get_items($request)
@@ -61,6 +61,46 @@ class Peers_Controller extends Base_Controller
         return new \WP_REST_Response([
             'status' => 'ok',
             'rows_affected' => $rows_affected,
+        ], 200);
+    }
+
+    public function delete_item($request)
+    {
+        global $wpdb;
+
+        $data = $request->get_params();
+
+        if (!isset($data['id'])) {
+            return new \WP_REST_Response([
+                'message' => __('Peer id is required', 'prix-chat'),
+            ], 400);
+        }
+
+        $user_id = get_current_user_id();
+
+        $peer = Peer::find([
+            'id' => $data['id'],
+            'withs' => ['conversation'],
+        ]);
+
+        if (!$peer) {
+            return new \WP_REST_Response([
+                'message' => __('Peer not found', 'prix-chat'),
+            ], 404);
+        }
+
+        if ($peer->conversation->user_id != $user_id) {
+            return new \WP_REST_Response([
+                'message' => __('You are not allowed to delete this peer', 'prix-chat'),
+            ], 403);
+        }
+
+        $wpdb->delete($wpdb->prefix . 'prix_chat_peers', [
+            'id' => $data['id'],
+        ]);
+
+        return new \WP_REST_Response([
+            'status' => 'ok',
         ], 200);
     }
 }
