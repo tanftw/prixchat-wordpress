@@ -1,6 +1,6 @@
 <?php
 
-namespace Heave\PrixChat;
+namespace PrixChat;
 
 class BroadcastService
 {
@@ -91,8 +91,8 @@ class BroadcastService
     public function start()
     {
         // Enable cors
-        header('Access-Control-Allow-Origin: *');
-        header('Access-Control-Allow-Credentials: true');
+        // header('Access-Control-Allow-Origin: *');
+        // header('Access-Control-Allow-Credentials: true');
 
         // Start broadcasting SSE
         header('Content-Type: text/event-stream; charset=utf-8');

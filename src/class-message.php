@@ -1,6 +1,6 @@
 <?php
 
-namespace Heave\PrixChat;
+namespace PrixChat;
 
 class Message
 {

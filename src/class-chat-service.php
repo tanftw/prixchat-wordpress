@@ -1,6 +1,6 @@
 <?php
 
-namespace Heave\PrixChat;
+namespace PrixChat;
 
 class ChatService
 {
@@ -13,7 +13,7 @@ class ChatService
             $message['conversation_id'] = $this->create_conversation($data['url']);
         }
 
-        if ($message['reply_to']) {
+        if (isset($message['reply_to']) && isset($message['reply_to']['id'])) {
             $message['reply_to_id']             = $message['reply_to']['id'];
             $message['reply_to']['content']     = esc_html(trim($message['reply_to']['content']));
             $message['reply_to'] = json_encode($message['reply_to']);

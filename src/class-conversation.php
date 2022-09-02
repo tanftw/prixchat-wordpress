@@ -1,6 +1,6 @@
 <?php
 
-namespace Heave\PrixChat;
+namespace PrixChat;
 
 class Conversation
 {
@@ -28,7 +28,8 @@ class Conversation
             }
 
             $conversation->recipient = $recipient;
-
+            $conversation->has_avatar = !empty($conversation->avatar);
+            
             if (str_contains('group', $conversation->type) && empty($conversation->avatar) && count($conversation->peers) > 1) {
                 $first_two_peers = array_slice($conversation->peers, 0, 2);
                 $avatars = array_column($first_two_peers, 'avatar');

@@ -1,5 +1,5 @@
 <?php
-namespace Heave\PrixChat;
+namespace PrixChat;
 
 class SSE
 {

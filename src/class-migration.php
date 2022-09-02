@@ -1,6 +1,6 @@
 <?php
 
-namespace Heave\PrixChat;
+namespace PrixChat;
 
 /**
  * Setup and migrate data each time db has update
@@ -8,7 +8,7 @@ namespace Heave\PrixChat;
 class Migration
 {
     // Current database version
-    public static $db_version = '0.2.6';
+    public static $db_version = '0.2.7';
 
     public function __construct()
     {
@@ -53,6 +53,7 @@ class Migration
             type varchar(10) NOT NULL,
             hash varchar(32) DEFAULT NULL,
             title VARCHAR(255) DEFAULT NULL,
+            description VARCHAR(255) DEFAULT NULL,
             meta JSON DEFAULT NULL,
             avatar VARCHAR(255) DEFAULT NULL,
             peers JSON DEFAULT NULL,
