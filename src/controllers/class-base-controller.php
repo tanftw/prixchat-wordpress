@@ -5,7 +5,7 @@ namespace PrixChat\Controllers;
 use WP_REST_Controller;
 
 class Base_Controller extends WP_REST_Controller {
-	protected $namespace = 'prix-chat/v1';
+	protected $namespace = 'prixchat/v1';
 
 	protected $rest_base = '';
 
@@ -41,7 +41,7 @@ class Base_Controller extends WP_REST_Controller {
 		] );
 
 		register_rest_route( $this->namespace, '/' . $rest_base . '/(?P<id>[\d]+)', [
-			'methods'             => 'PUT',
+			'methods'             => ['PUT', 'POST'],
 			'callback'            => [ $this, 'update_item' ],
 			'permission_callback' => '__return_true',
 		] );

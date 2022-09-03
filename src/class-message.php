@@ -26,8 +26,8 @@ class Message
             'user_id'         => get_current_user_id(),
             'content'         => $data['content'],
             'created_at'      => current_time('mysql'),
-            'reply_to'        => $data['reply_to'],
-            'reply_to_id'     => $data['reply_to_id'],
+            'reply_to'        => $data['reply_to'] ?? null,
+            'reply_to_id'     => $data['reply_to_id'] ?? null,
         ];
 
         $wpdb->insert($wpdb->prefix . 'prix_chat_messages', $data);

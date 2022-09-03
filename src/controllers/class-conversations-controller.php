@@ -44,7 +44,7 @@ class Conversations_Controller extends Base_Controller {
 
 		if ( ! isset( $data['title'] ) ) {
 			return new \WP_REST_Response( [
-				'message' => __( 'Title is required', 'prix-chat' ),
+				'message' => __( 'Title is required', 'prixchat' ),
 			], 400 );
 		}
 
@@ -106,7 +106,7 @@ class Conversations_Controller extends Base_Controller {
 
 		if ( ! $peer ) {
 			return new \WP_REST_Response( [
-				'message' => __( 'You are not a member of this conversation', 'prix-chat' ),
+				'message' => __( 'You are not a member of this conversation', 'prixchat' ),
 			], 403 );
 		}
 
@@ -159,7 +159,7 @@ class Conversations_Controller extends Base_Controller {
 
 		if ( ! $conversation ) {
 			return new \WP_REST_Response( [
-				'message' => __( 'Conversation not found', 'prix-chat' ),
+				'message' => __( 'Conversation not found', 'prixchat' ),
 			], 404 );
 		}
 
@@ -175,5 +175,59 @@ class Conversations_Controller extends Base_Controller {
 		return new \WP_REST_Response( [
 			'status' => 'ok',
 		], 200 );
+	}
+
+	public function update_item($request)
+	{
+		$data  = $request->get_params();
+		$files = $request->get_file_params();
+
+		if ( ! isset( $data['title'] ) ) {
+			return new \WP_REST_Response( [
+				'message' => __( 'Title is required', 'prixchat' ),
+			], 400 );
+		}
+
+		$update = [
+			'title' => $data['title'],
+		];
+
+		if ( ! empty( $files ) && ! empty( $files['avatar']['tmp_name'] ) ) {
+			require_once( ABSPATH . 'wp-admin/includes/image.php' );
+			require_once( ABSPATH . 'wp-admin/includes/file.php' );
+			require_once( ABSPATH . 'wp-admin/includes/media.php' );
+
+			$mimes = array(
+				'bmp'  => 'image/bmp',
+				'gif'  => 'image/gif',
+				'jpe'  => 'image/jpeg',
+				'jpeg' => 'image/jpeg',
+				'jpg'  => 'image/jpeg',
+				'png'  => 'image/png',
+				'tif'  => 'image/tiff',
+				'tiff' => 'image/tiff'
+			);
+
+			$overrides = array(
+				'mimes'     => $mimes,
+				'test_form' => false
+			);
+
+			$uploaded = wp_handle_upload( $files['avatar'], $overrides );
+
+			if (isset($uploaded['url'])) {
+				$update['avatar'] = $uploaded['url'];
+			}
+		}
+
+		Conversation::update($update, [
+			'id' => $data['id'],
+		]);
+
+		$conversation = Conversation::find([
+			'id' => $data['id'],
+		]);
+		
+		return new \WP_REST_Response( $conversation, 200 );
 	}
 }

@@ -13,10 +13,10 @@ class Admin {
 
 	public function add_admin_page() {
 		add_menu_page(
-			__( 'PrixChat', 'prix-chat' ),
-			__( 'PrixChat', 'prix-chat' ),
+			__( 'PrixChat', 'prixchat' ),
+			__( 'PrixChat', 'prixchat' ),
 			'read',
-			'prix-chat',
+			'prixchat',
 			[ $this, 'render_admin_page' ],
 			'dashicons-format-chat',
 			3
@@ -24,13 +24,13 @@ class Admin {
 	}
 
 	public function enqueue_admin_scripts() {
-		if ( get_current_screen()->id !== 'toplevel_page_prix-chat' ) {
+		if ( get_current_screen()->id !== 'toplevel_page_prixchat' ) {
 			return;
 		}
 
-		wp_enqueue_style( 'prix-chat-admin', PRIX_CHAT_URL . '/react-ui/dist/index.css' );
-		wp_enqueue_script( 'prix-chat-admin', PRIX_CHAT_URL . '/react-ui/dist/index.js', [ 'wp-i18n' ], wp_rand(), true );
-		wp_set_script_translations( 'prix-chat-admin', 'prix-chat' );
+		wp_enqueue_style( 'prixchat-admin', PRIX_CHAT_URL . '/react-ui/dist/index.css' );
+		wp_enqueue_script( 'prixchat-admin', PRIX_CHAT_URL . '/react-ui/dist/index.js', [ 'wp-i18n' ], wp_rand(), true );
+		wp_set_script_translations( 'prixchat-admin', 'prixchat' );
 
 		$chat_service = new Chat_Service();
 		// Retrieve all users and pass them to scripts
@@ -48,8 +48,8 @@ class Admin {
 
 		// Although we are using wp_set_script_translations for i18n, it's useful to use wp_localize_script
 		// to pass data to the React app.
-		wp_localize_script( 'prix-chat-admin', 'prix', [
-			'apiUrl'        => home_url( '/wp-json/prix-chat/v1/' ),
+		wp_localize_script( 'prixchat-admin', 'prix', [
+			'apiUrl'        => home_url( '/wp-json/prixchat/v1/' ),
 			'nonce'         => wp_create_nonce( 'wp_rest' ),
 			'conversations' => $conversations,
 			'me'            => $me,

@@ -39,7 +39,7 @@ class Messages_Controller extends Base_Controller
 
         if (!isset($data['id'])) {
             return new \WP_REST_Response([
-                'message' => __('Message id is required', 'prix-chat'),
+                'message' => __('Message id is required', 'prixchat'),
             ], 400);
         }
 
@@ -53,13 +53,13 @@ class Messages_Controller extends Base_Controller
 
         if (!$message) {
             return new \WP_REST_Response([
-                'message' => __('Message not found', 'prix-chat'),
+                'message' => __('Message not found', 'prixchat'),
             ], 404);
         }
 
         if ($message->user_id != $user_id) {
             return new \WP_REST_Response([
-                'message' => __('You can not delete this message', 'prix-chat'),
+                'message' => __('You can not delete this message', 'prixchat'),
             ], 403);
         }
 
@@ -99,7 +99,7 @@ class Messages_Controller extends Base_Controller
 
         if (!isset($data['id'])) {
             return new \WP_REST_Response([
-                'message' => __('Message id is required', 'prix-chat'),
+                'message' => __('Message id is required', 'prixchat'),
             ], 400);
         }
 
@@ -109,7 +109,7 @@ class Messages_Controller extends Base_Controller
 
         if (!$message) {
             return new \WP_REST_Response([
-                'message' => __('Message not found', 'prix-chat'),
+                'message' => __('Message not found', 'prixchat'),
             ], 404);
         }
 

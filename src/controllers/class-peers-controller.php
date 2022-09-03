@@ -18,13 +18,13 @@ class Peers_Controller extends Base_Controller {
 
 		if ( ! $conversation_id ) {
 			return new \WP_REST_Response( [
-				'message' => __( 'Conversation id is required', 'prix-chat' ),
+				'message' => __( 'Conversation id is required', 'prixchat' ),
 			], 400 );
 		}
 
 		if ( ! $users ) {
 			return new \WP_REST_Response( [
-				'message' => __( 'Users is required', 'prix-chat' ),
+				'message' => __( 'Users is required', 'prixchat' ),
 			], 400 );
 		}
 
@@ -69,7 +69,7 @@ class Peers_Controller extends Base_Controller {
 
 		if ( ! isset( $data['id'] ) ) {
 			return new \WP_REST_Response( [
-				'message' => __( 'Peer id is required', 'prix-chat' ),
+				'message' => __( 'Peer id is required', 'prixchat' ),
 			], 400 );
 		}
 
@@ -82,13 +82,13 @@ class Peers_Controller extends Base_Controller {
 
 		if ( ! $peer ) {
 			return new \WP_REST_Response( [
-				'message' => __( 'Peer not found', 'prix-chat' ),
+				'message' => __( 'Peer not found', 'prixchat' ),
 			], 404 );
 		}
 
 		if ( $peer->conversation->user_id != $user_id ) {
 			return new \WP_REST_Response( [
-				'message' => __( 'You are not allowed to delete this peer', 'prix-chat' ),
+				'message' => __( 'You are not allowed to delete this peer', 'prixchat' ),
 			], 403 );
 		}
 

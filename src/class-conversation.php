@@ -87,12 +87,10 @@ class Conversation {
 		] );
 	}
 
-	public static function update( $data ) {
+	public static function update( $data, $where ) {
 		global $wpdb;
 
-		return $wpdb->update( $wpdb->prefix . 'prix_chat_conversations', $data, [
-			'id' => $data['id'],
-		] );
+		return $wpdb->update( $wpdb->prefix . 'prix_chat_conversations', $data, $where);
 	}
 
 	public static function get( $args = [] ) {
