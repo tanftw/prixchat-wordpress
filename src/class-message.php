@@ -125,7 +125,6 @@ class Message
             $message->reactions = array_map(function ($reaction) use ($peers) {
                 return array_map(function ($peer) use ($peers) {
                     $peer['peer'] = $peers[$peer['peer_id']] ?? [];
-
                     return $peer;
                 }, $reaction);
 

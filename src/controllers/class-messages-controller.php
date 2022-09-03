@@ -130,7 +130,7 @@ class Messages_Controller extends Base_Controller
 
         $reactions[$reaction][] = [
             'peer_id' => $peer->id,
-            'reacted_at' => date('Y-m-d H:i:s'),
+            'reacted_at' => wp_date('Y-m-d H:i:s'),
         ];
 
         $reactions = json_encode($reactions);

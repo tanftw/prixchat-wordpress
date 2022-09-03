@@ -4,103 +4,100 @@ namespace PrixChat\Controllers;
 
 use PrixChat\Chat_Service;
 use PrixChat\Peer;
-class Peers_Controller extends Base_Controller
-{
-    public function get_items($request)
-    {
-        // Get peers
-    }
 
-    public function create_items($request)
-    {
-        global $wpdb;
+class Peers_Controller extends Base_Controller {
+	public function get_items( $request ) {
+		// Get peers
+	}
 
-        $conversation_id = $request->get_param('conversation_id');
-        $users = $request->get_param('users');
+	public function create_items( $request ) {
+		global $wpdb;
 
-        if (!$conversation_id) {
-            return new \WP_REST_Response([
-                'message' => __('Conversation id is required', 'prix-chat'),
-            ], 400);
-        }
+		$conversation_id = $request->get_param( 'conversation_id' );
+		$users           = $request->get_param( 'users' );
 
-        if (!$users) {
-            return new \WP_REST_Response([
-                'message' => __('Users is required', 'prix-chat'),
-            ], 400);
-        }
+		if ( ! $conversation_id ) {
+			return new \WP_REST_Response( [
+				'message' => __( 'Conversation id is required', 'prix-chat' ),
+			], 400 );
+		}
 
-        $peers = array_map(function ($user) use ($conversation_id) {
-            return [
-                'user_id'   => $user['id'],
-                'name'      => $user['name'],
-                'email'     => $user['email'],
-                'conversation_id' => $conversation_id,
-                'is_typing' => false,
-                'avatar' => $user['avatar'],
-            ];
-        }, $users);
+		if ( ! $users ) {
+			return new \WP_REST_Response( [
+				'message' => __( 'Users is required', 'prix-chat' ),
+			], 400 );
+		}
 
-        $query = "INSERT INTO {$wpdb->prefix}prix_chat_peers (user_id, name, email, conversation_id, is_typing, avatar) VALUES ";
-        $prepare = [];
+		$peers = array_map( function ( $user ) use ( $conversation_id ) {
+			return [
+				'user_id'         => $user['id'],
+				'name'            => $user['name'],
+				'email'           => $user['email'],
+				'conversation_id' => $conversation_id,
+				'is_typing'       => false,
+				'avatar'          => $user['avatar'],
+			];
+		}, $users );
 
-        foreach ($peers as $peer) {
-            $query .= ' (%d, %s, %s, %d, %s, %s),';
-            $prepare[] = $peer['user_id'];
-            $prepare[] = $peer['name'];
-            $prepare[] = $peer['email'];
-            $prepare[] = $peer['conversation_id'];
-            $prepare[] = $peer['is_typing'];
-            $prepare[] = $peer['avatar'];
-        }
+		$query   = "INSERT INTO {$wpdb->prefix}prix_chat_peers (user_id, name, email, conversation_id, is_typing, avatar) VALUES ";
+		$prepare = [];
 
-        $query = rtrim($query, ',');
+		foreach ( $peers as $peer ) {
+			$query     .= ' (%d, %s, %s, %d, %s, %s),';
+			$prepare[] = $peer['user_id'];
+			$prepare[] = $peer['name'];
+			$prepare[] = $peer['email'];
+			$prepare[] = $peer['conversation_id'];
+			$prepare[] = $peer['is_typing'];
+			$prepare[] = $peer['avatar'];
+		}
 
-        $rows_affected = $wpdb->query($wpdb->prepare($query, $prepare));
+		$query = rtrim( $query, ',' );
 
-        return new \WP_REST_Response([
-            'status' => 'ok',
-            'rows_affected' => $rows_affected,
-        ], 200);
-    }
+		$rows_affected = $wpdb->query( $wpdb->prepare( $query, $prepare ) );
 
-    public function delete_item($request)
-    {
-        global $wpdb;
+		return new \WP_REST_Response( [
+			'status'        => 'ok',
+			'rows_affected' => $rows_affected,
+		], 200 );
+	}
 
-        $data = $request->get_params();
+	public function delete_item( $request ) {
+		global $wpdb;
 
-        if (!isset($data['id'])) {
-            return new \WP_REST_Response([
-                'message' => __('Peer id is required', 'prix-chat'),
-            ], 400);
-        }
+		$data = $request->get_params();
 
-        $user_id = get_current_user_id();
+		if ( ! isset( $data['id'] ) ) {
+			return new \WP_REST_Response( [
+				'message' => __( 'Peer id is required', 'prix-chat' ),
+			], 400 );
+		}
 
-        $peer = Peer::find([
-            'id' => $data['id'],
-            'withs' => ['conversation'],
-        ]);
+		$user_id = get_current_user_id();
 
-        if (!$peer) {
-            return new \WP_REST_Response([
-                'message' => __('Peer not found', 'prix-chat'),
-            ], 404);
-        }
+		$peer = Peer::find( [
+			'id'    => $data['id'],
+			'withs' => [ 'conversation' ],
+		] );
 
-        if ($peer->conversation->user_id != $user_id) {
-            return new \WP_REST_Response([
-                'message' => __('You are not allowed to delete this peer', 'prix-chat'),
-            ], 403);
-        }
+		if ( ! $peer ) {
+			return new \WP_REST_Response( [
+				'message' => __( 'Peer not found', 'prix-chat' ),
+			], 404 );
+		}
 
-        $wpdb->delete($wpdb->prefix . 'prix_chat_peers', [
-            'id' => $data['id'],
-        ]);
+		if ( $peer->conversation->user_id != $user_id ) {
+			return new \WP_REST_Response( [
+				'message' => __( 'You are not allowed to delete this peer', 'prix-chat' ),
+			], 403 );
+		}
 
-        return new \WP_REST_Response([
-            'status' => 'ok',
-        ], 200);
-    }
+		$wpdb->delete( $wpdb->prefix . 'prix_chat_peers', [
+			'id' => $data['id'],
+		] );
+
+		return new \WP_REST_Response( [
+			'status' => 'ok',
+		], 200 );
+	}
 }

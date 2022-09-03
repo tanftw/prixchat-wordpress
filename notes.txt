@@ -1,6 +1,3 @@
-Edit Group dialog
-Members dialog
-Add member dialog
 Check debug.log
-
-Reactions display (1) only
+Test all feature
+Format code WP coding style
