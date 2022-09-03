@@ -35,7 +35,7 @@ function prixchat_uninstall() {
 	PrixChat\Migration::down();
 }
 
-function prixchat_clear_cache() {
+function prix_chat_uninstall_cronjobs() {
 	wp_clear_scheduled_hook( 'prix_chat_clear_cache' );
 }
 
@@ -43,4 +43,4 @@ function prixchat_clear_cache() {
 register_activation_hook( __FILE__, 'prix_chat_activation' );
 
 // Clean up after deactivation
-register_deactivation_hook( __FILE__, 'prixchat_clear_cache' );
+register_deactivation_hook( __FILE__, 'prix_chat_uninstall_cronjobs' );

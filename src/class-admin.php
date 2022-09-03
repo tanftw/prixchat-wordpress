@@ -60,7 +60,7 @@ class Admin {
 	public function render_admin_page() {
 		?>
         <div class="wrap">
-            <div id="root"></div>
+            <div id="pc-root"></div>
         </div>
 		<?php
 	}

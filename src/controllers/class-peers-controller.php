@@ -2,7 +2,6 @@
 
 namespace PrixChat\Controllers;
 
-use PrixChat\Chat_Service;
 use PrixChat\Peer;
 
 class Peers_Controller extends Base_Controller {
