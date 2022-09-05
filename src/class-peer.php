@@ -20,7 +20,7 @@ class Peer {
 	 */
 	public static function get_all_users() {
 		// Retrieve from cache, otherwise, retrieve from database
-		$users = get_transient( 'prix_chat_users' );
+		$users = get_transient( 'prixchat_users' );
 
 		if ( $users === false ) {
 			$users = get_users();
@@ -34,7 +34,7 @@ class Peer {
 				];
 			}, $users );
 
-			set_transient( 'prix_chat_users', $users, 5 * MINUTE_IN_SECONDS );
+			set_transient( 'prixchat_users', $users, 5 * MINUTE_IN_SECONDS );
 		}
 
 		return $users;
@@ -48,7 +48,7 @@ class Peer {
 			return null;
 		}
 
-		$query = "SELECT * FROM {$wpdb->prefix}prix_chat_peers WHERE id = %d";
+		$query = "SELECT * FROM {$wpdb->prefix}prixchat_peers WHERE id = %d";
 		$peer  = $wpdb->get_row( $wpdb->prepare( $query, $id ) );
 
 		if ( in_array( 'conversation', $args['withs'] ) ) {
@@ -63,7 +63,7 @@ class Peer {
 	public static function get( $args = [] ) {
 		global $wpdb;
 
-		$query   = "SELECT * FROM {$wpdb->prefix}prix_chat_peers WHERE 1 = 1";
+		$query   = "SELECT * FROM {$wpdb->prefix}prixchat_peers WHERE 1 = 1";
 		$prepare = [];
 
 		if ( isset( $args['conversation_id'] ) ) {
@@ -81,6 +81,8 @@ class Peer {
 			$prepare[] = $args['user_id'];
 		}
 
+		$query .= " AND deleted_at IS NULL";
+
 		$query = $wpdb->get_results( $wpdb->prepare( $query, $prepare ), OBJECT_K );
 
 		return array_map( function ( $peer ) {
@@ -91,7 +93,7 @@ class Peer {
 	public static function get_conversation_ids() {
 		global $wpdb;
 
-		$query            = "SELECT DISTINCT conversation_id FROM {$wpdb->prefix}prix_chat_peers WHERE user_id = %d";
+		$query            = "SELECT DISTINCT conversation_id FROM {$wpdb->prefix}prixchat_peers WHERE user_id = %d";
 		$conversation_ids = $wpdb->get_col( $wpdb->prepare( $query, get_current_user_id() ) );
 
 		return $conversation_ids;
@@ -114,11 +116,23 @@ class Peer {
 
 			$data['name']   = $user->display_name;
 			$data['avatar'] = get_avatar_url( $user_id );
+			$data['email']  = $user->user_email;
 		}
 
 		$data['created_at'] = wp_date( 'Y-m-d H:i:s' );
 
-		$wpdb->insert( $wpdb->prefix . 'prix_chat_peers', $data );
+		$query = "INSERT INTO {$wpdb->prefix}prixchat_peers (conversation_id, user_id, name, email, avatar, created_at) 
+					VALUES (%d, %d, %s, %s, %s, %s) 
+					ON DUPLICATE KEY UPDATE deleted_at = NULL";
+
+		$wpdb->query( $wpdb->prepare( $query,
+			$data['conversation_id'],
+			$data['user_id'],
+			$data['name'] ?? null,
+			$data['email'] ?? null,
+			$data['avatar'] ?? null,
+			$data['created_at']
+		) );
 
 		return array_merge( $data, [
 			'id' => $wpdb->insert_id,
@@ -128,7 +142,7 @@ class Peer {
 	public static function update( $data, $conditions ) {
 		global $wpdb;
 
-		$wpdb->update( $wpdb->prefix . 'prix_chat_peers', $data, $conditions );
+		$wpdb->update( $wpdb->prefix . 'prixchat_peers', $data, $conditions );
 	}
 
 	public static function get_unread_count( $user_id ) {
@@ -138,8 +152,8 @@ class Peer {
                         P.conversation_id, 
                         count(*) as total_unread 
                  FROM 
-                    `wp_prix_chat_messages` M, 
-                    `wp_prix_chat_peers` P 
+                    `wp_prixchat_messages` M, 
+                    `wp_prixchat_peers` P 
                 WHERE P.user_id = %d 
                 AND M.conversation_id = P.conversation_id 
                 AND P.last_seen < M.created_at 
@@ -161,14 +175,14 @@ class Peer {
 
 		$now = wp_date( 'Y-m-d H:i:s' );
 
-		$wpdb->update( $wpdb->prefix . 'prix_chat_peers', [
+		$wpdb->update( $wpdb->prefix . 'prixchat_peers', [
 			'last_seen' => $now,
 		], [
 			'conversation_id' => $conversation_id,
 			'user_id'         => $user_id,
 		] );
 
-		$wpdb->update( $wpdb->prefix . 'prix_chat_peers', [
+		$wpdb->update( $wpdb->prefix . 'prixchat_peers', [
 			'last_online' => $now,
 		], [
 			'user_id' => $user_id,

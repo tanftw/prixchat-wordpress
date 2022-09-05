@@ -68,9 +68,9 @@ class Messages_Controller extends Base_Controller
         ];
 
         if ($delete_for_every_one == true) {
-            $wpdb->delete($wpdb->prefix . 'prix_chat_messages', $where);
+            $wpdb->delete($wpdb->prefix . 'prixchat_messages', $where);
         } else {
-            $wpdb->update($wpdb->prefix . 'prix_chat_messages', [
+            $wpdb->update($wpdb->prefix . 'prixchat_messages', [
                 'deleted_at' => wp_date('Y-m-d H:i:s'),
                 'deleted_for' => $message->peer_id,
             ], $where);
@@ -135,7 +135,7 @@ class Messages_Controller extends Base_Controller
 
         $reactions = json_encode($reactions);
 
-        $wpdb->update($wpdb->prefix . 'prix_chat_messages', [
+        $wpdb->update($wpdb->prefix . 'prixchat_messages', [
             'reactions' => $reactions,
         ], [
             'id' => $message->id,

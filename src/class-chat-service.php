@@ -7,7 +7,7 @@ class Chat_Service {
 		$message            = $data['message'];
 		$message['content'] = esc_html( trim( $message['content'] ) );
 
-		if ( ! $message['conversation_id'] ) {
+		if ( ! isset( $message['conversation_id'] ) ) {
 			$message['conversation_id'] = $this->create_conversation( $data['url'] );
 		}
 
@@ -81,15 +81,15 @@ class Chat_Service {
 
 		if ( ! empty( $current_user_conversations_ids ) ) {
 			$prepare[]     = $current_user_conversations_ids;
-			$query         = "SELECT * FROM {$wpdb->prefix}prix_chat_conversations WHERE id IN (%1s) AND deleted_at IS NULL";
+			$query         = "SELECT * FROM {$wpdb->prefix}prixchat_conversations WHERE id IN (%1s) AND deleted_at IS NULL";
 			$query         = $wpdb->prepare( $query, $prepare );
 			$conversations = $wpdb->get_results( $query );
 
 			$messages_query = "SELECT * 
-                FROM {$wpdb->prefix}prix_chat_messages 
+                FROM {$wpdb->prefix}prixchat_messages 
                 WHERE id IN (
                     SELECT MAX(id) 
-                    FROM {$wpdb->prefix}prix_chat_messages 
+                    FROM {$wpdb->prefix}prixchat_messages 
                     WHERE conversation_id IN (%1s) 
                     AND (
                         deleted_at IS NULL

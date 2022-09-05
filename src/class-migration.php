@@ -7,14 +7,14 @@ namespace PrixChat;
  */
 class Migration {
 	// Current database version
-	public static $db_version = '0.2.7';
+	public static $db_version = '0.4.0';
 
 	public function __construct() {
 		add_action( 'plugins_loaded', [ $this, 'check_migrate' ] );
 	}
 
 	public function check_migrate() {
-		$installed_version = get_option( 'prix_chat_db_version' );
+		$installed_version = get_option( 'prixchat_db_version' );
 
 		if ( $installed_version != self::$db_version ) {
 			self::up();
@@ -32,9 +32,9 @@ class Migration {
 		$charset_collate = $wpdb->get_charset_collate();
 
 		// We'll create 3 tables
-		$prix_chat_conversations = $wpdb->prefix . 'prix_chat_conversations';
-		$prix_chat_peers         = $wpdb->prefix . 'prix_chat_peers';
-		$prix_chat_messages      = $wpdb->prefix . 'prix_chat_messages';
+		$prixchat_conversations = $wpdb->prefix . 'prixchat_conversations';
+		$prixchat_peers         = $wpdb->prefix . 'prixchat_peers';
+		$prixchat_messages      = $wpdb->prefix . 'prixchat_messages';
 
 		$increments      = 'BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT';
 		$nullableInteger = 'BIGINT(20) UNSIGNED DEFAULT NULL';
@@ -44,7 +44,7 @@ class Migration {
             deleted_at timestamp NULL DEFAULT NULL";
 		$primaryKeyId    = 'PRIMARY KEY  (id)';
 
-		$create_prix_chat_conversations_table = "CREATE TABLE {$prix_chat_conversations} (
+		$create_prixchat_conversations_table = "CREATE TABLE {$prixchat_conversations} (
             id {$increments},
             type varchar(10) NOT NULL,
             hash varchar(32) DEFAULT NULL,
@@ -60,7 +60,7 @@ class Migration {
             UNIQUE KEY hash (hash)
         ) $charset_collate;";
 
-		$create_prix_chat_peers_table = "CREATE TABLE {$prix_chat_peers} (
+		$create_prixchat_peers_table = "CREATE TABLE {$prixchat_peers} (
             id {$increments},
             user_id {$nullableInteger},
             name varchar(60) DEFAULT NULL,
@@ -76,10 +76,11 @@ class Migration {
             status VARCHAR(10) DEFAULT NULL,
             role VARCHAR(10) DEFAULT NULL,
             {$dateTimeColumns},
-            {$primaryKeyId}
+            {$primaryKeyId},
+			UNIQUE KEY conversation_user (conversation_id, user_id)
         ) $charset_collate;";
 
-		$create_prix_chat_messages_table = "CREATE TABLE {$prix_chat_messages} (
+		$create_prixchat_messages_table = "CREATE TABLE {$prixchat_messages} (
             id {$increments},
             type VARCHAR(10) DEFAULT NULL,
             content TEXT DEFAULT NULL,
@@ -98,11 +99,11 @@ class Migration {
 
 		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 
-		dbDelta( $create_prix_chat_conversations_table );
-		dbDelta( $create_prix_chat_peers_table );
-		dbDelta( $create_prix_chat_messages_table );
+		dbDelta( $create_prixchat_conversations_table );
+		dbDelta( $create_prixchat_peers_table );
+		dbDelta( $create_prixchat_messages_table );
 
-		update_option( 'prix_chat_db_version', self::$db_version );
+		update_option( 'prixchat_db_version', self::$db_version );
 	}
 
 	/**
@@ -113,13 +114,11 @@ class Migration {
 	public static function down() {
 		global $wpdb;
 
-		$wpdb->query( 'DROP TABLE IF EXISTS ' . $wpdb->prefix . 'prix_chat_conversations' );
-		$wpdb->query( 'DROP TABLE IF EXISTS ' . $wpdb->prefix . 'prix_chat_messages' );
-		$wpdb->query( 'DROP TABLE IF EXISTS ' . $wpdb->prefix . 'prix_chat_peers' );
+		$wpdb->query( 'DROP TABLE IF EXISTS ' . $wpdb->prefix . 'prixchat_conversations' );
+		$wpdb->query( 'DROP TABLE IF EXISTS ' . $wpdb->prefix . 'prixchat_messages' );
+		$wpdb->query( 'DROP TABLE IF EXISTS ' . $wpdb->prefix . 'prixchat_peers' );
 
-		delete_option( 'prix_chat_db_version' );
-		// delete_option('prix_chat_settings');
+		delete_option( 'prixchat_db_version' );
+		// delete_option('prixchat_settings');
 	}
 }
-
-new Migration;

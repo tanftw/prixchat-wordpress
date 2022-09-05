@@ -5,10 +5,10 @@ namespace PrixChat;
 class Cache_Service {
 	public function __construct() {
 		// Register wp cronjob for clearing cache every day
-		add_action( 'prix_chat_clear_cache', [ $this, 'clear_cache' ] );
+		add_action( 'prixchat_clear_cache', [ $this, 'clear_cache' ] );
 
-		if ( ! wp_next_scheduled( 'prix_chat_clear_cache' ) ) {
-			wp_schedule_event( time(), 'daily', 'prix_chat_clear_cache' );
+		if ( ! wp_next_scheduled( 'prixchat_clear_cache' ) ) {
+			wp_schedule_event( time(), 'daily', 'prixchat_clear_cache' );
 		}
 	}
 
@@ -40,7 +40,7 @@ class Cache_Service {
 		}
 
 		$case = '(CASE ' . implode( ' ', $when_then ) . ' END)';
-		$sql  = "UPDATE {$wpdb->prefix}prix_chat_peers SET avatar = $case";
+		$sql  = "UPDATE {$wpdb->prefix}prixchat_peers SET avatar = $case";
 
 		$wpdb->query( $wpdb->prepare( $sql, $prepare ) );
 	}

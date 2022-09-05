@@ -112,7 +112,7 @@ class Conversations_Controller extends Base_Controller {
 
 		$peer = reset( $peer );
 
-		$wpdb->update( $wpdb->prefix . 'prix_chat_peers', [
+		$wpdb->update( $wpdb->prefix . 'prixchat_peers', [
 			'deleted_at' => wp_date( 'Y-m-d H:i:s' ),
 		], [
 			'id' => $peer->id,

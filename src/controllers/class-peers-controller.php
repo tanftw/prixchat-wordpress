@@ -38,7 +38,7 @@ class Peers_Controller extends Base_Controller {
 			];
 		}, $users );
 
-		$query   = "INSERT INTO {$wpdb->prefix}prix_chat_peers (user_id, name, email, conversation_id, is_typing, avatar) VALUES ";
+		$query   = "INSERT INTO {$wpdb->prefix}prixchat_peers (user_id, name, email, conversation_id, is_typing, avatar) VALUES ";
 		$prepare = [];
 
 		foreach ( $peers as $peer ) {
@@ -51,7 +51,7 @@ class Peers_Controller extends Base_Controller {
 			$prepare[] = $peer['avatar'];
 		}
 
-		$query = rtrim( $query, ',' );
+		$query .= " ON DUPLICATE KEY UPDATE deleted_at = NULL";
 
 		$rows_affected = $wpdb->query( $wpdb->prepare( $query, $prepare ) );
 
@@ -91,7 +91,9 @@ class Peers_Controller extends Base_Controller {
 			], 403 );
 		}
 
-		$wpdb->delete( $wpdb->prefix . 'prix_chat_peers', [
+		$wpdb->update( $wpdb->prefix . 'prixchat_peers', [
+			'deleted_at' => wp_date( 'Y-m-d H:i:s' ),
+		], [
 			'id' => $data['id'],
 		] );
 

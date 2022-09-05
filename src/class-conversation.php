@@ -49,7 +49,7 @@ class Conversation {
 	public static function find( $args ) {
 		global $wpdb;
 
-		$query = "SELECT * FROM {$wpdb->prefix}prix_chat_conversations WHERE 1 = 1";
+		$query = "SELECT * FROM {$wpdb->prefix}prixchat_conversations WHERE 1 = 1";
 
 		$prepare = [];
 
@@ -80,7 +80,7 @@ class Conversation {
 			'user_id'    => get_current_user_id(),
 		] );
 
-		$wpdb->insert( $wpdb->prefix . 'prix_chat_conversations', $data );
+		$wpdb->insert( $wpdb->prefix . 'prixchat_conversations', $data );
 
 		return array_merge( $data, [
 			'id' => $wpdb->insert_id,
@@ -90,14 +90,14 @@ class Conversation {
 	public static function update( $data, $where ) {
 		global $wpdb;
 
-		return $wpdb->update( $wpdb->prefix . 'prix_chat_conversations', $data, $where);
+		return $wpdb->update( $wpdb->prefix . 'prixchat_conversations', $data, $where);
 	}
 
 	public static function get( $args = [] ) {
 		global $wpdb;
 
 		$prepare = [];
-		$query   = "SELECT * FROM {$wpdb->prefix}prix_chat_conversations WHERE 1 = 1";
+		$query   = "SELECT * FROM {$wpdb->prefix}prixchat_conversations WHERE 1 = 1";
 
 		if ( isset( $args['in'] ) ) {
 			$query     .= " AND id IN (%1s)";

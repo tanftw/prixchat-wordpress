@@ -2,142 +2,138 @@
 
 namespace PrixChat;
 
-class Message
-{
-    public static function create($data)
-    {
-        global $wpdb;
+class Message {
+	public static function create( $data ) {
+		global $wpdb;
 
-        $peers = Peer::get([
-            'user_id' => get_current_user_id(),
-            'conversation_id' => $data['conversation_id'],
-        ]);
+		$peers = Peer::get( [
+			'user_id'         => get_current_user_id(),
+			'conversation_id' => $data['conversation_id'],
+		] );
 
-        if (!$peers) {
-            return [];
-        }
+		if ( ! $peers ) {
+			return [];
+		}
 
-        $peer = reset($peers);
+		$peer = reset( $peers );
 
-        $data = [
-            'type'            => $data['type'],
-            'conversation_id' => $data['conversation_id'],
-            'peer_id'         => $peer->id,
-            'user_id'         => get_current_user_id(),
-            'content'         => $data['content'],
-            'created_at'      => current_time('mysql'),
-            'reply_to'        => $data['reply_to'] ?? null,
-            'reply_to_id'     => $data['reply_to_id'] ?? null,
-        ];
+		$data = [
+			'type'            => $data['type'],
+			'conversation_id' => $data['conversation_id'],
+			'peer_id'         => $peer->id,
+			'user_id'         => get_current_user_id(),
+			'content'         => $data['content'],
+			'created_at'      => current_time( 'mysql' ),
+			'reply_to'        => $data['reply_to'] ?? null,
+			'reply_to_id'     => $data['reply_to_id'] ?? null,
+		];
 
-        $wpdb->insert($wpdb->prefix . 'prix_chat_messages', $data);
+		$wpdb->insert( $wpdb->prefix . 'prixchat_messages', $data );
 
-        return array_merge($data, [
-            'id' => $wpdb->insert_id,
-        ]);
-    }
+		return array_merge( $data, [
+			'id' => $wpdb->insert_id,
+		] );
+	}
 
-    public static function find($args = [])
-    {
-        global $wpdb;
+	public static function find( $args = [] ) {
+		global $wpdb;
 
-        if (isset($args['id'])) {
-            $args['id'] = intval($args['id']);
+		if ( isset( $args['id'] ) ) {
+			$args['id'] = intval( $args['id'] );
 
-            $sql = "SELECT * FROM {$wpdb->prefix}prix_chat_messages WHERE id = %d";
-            $sql = $wpdb->prepare($sql, $args['id']);
-            $message = $wpdb->get_row($sql);
+			$sql     = "SELECT * FROM {$wpdb->prefix}prixchat_messages WHERE id = %d";
+			$sql     = $wpdb->prepare( $sql, $args['id'] );
+			$message = $wpdb->get_row( $sql );
 
-            return $message;
-        }
-    }
+			return $message;
+		}
+	}
 
-    public static function get($args = [])
-    {
-        global $wpdb;
+	public static function get( $args = [] ) {
+		global $wpdb;
 
-        if (!isset($args['conversation_id'])) {
-            return [];
-        }
+		if ( ! isset( $args['conversation_id'] ) ) {
+			return [];
+		}
 
-        // Get conversation
-        $conversation = Conversation::find([
-            'id' => $args['conversation_id'],
-            'withs' => ['peers']
-        ]);
+		// Get conversation
+		$conversation = Conversation::find( [
+			'id'    => $args['conversation_id'],
+			'withs' => [ 'peers' ]
+		] );
 
 
-        $me_inside = false;
-        $me_peer = null;
-        foreach ($conversation->peers as $peer) {
-            if ($peer->user_id == get_current_user_id()) {
-                $me_peer = $peer;
-                $me_inside = true;
-                break;
-            }
-        }
+		$me_inside = false;
+		$me_peer   = null;
+		foreach ( $conversation->peers as $peer ) {
+			if ( $peer->user_id == get_current_user_id() ) {
+				$me_peer   = $peer;
+				$me_inside = true;
+				break;
+			}
+		}
 
-        if (!$me_inside) {
-            return [];
-        }
+		if ( ! $me_inside ) {
+			return [];
+		}
 
-        $prepare = [];
-        $query = "SELECT * FROM {$wpdb->prefix}prix_chat_messages WHERE conversation_id = %d AND (deleted_at IS NULL OR deleted_for <> peer_id)";
+		$prepare = [];
+		$query   = "SELECT * FROM {$wpdb->prefix}prixchat_messages WHERE conversation_id = %d AND (deleted_at IS NULL OR deleted_for <> peer_id)";
 
-        $prepare[] = $args['conversation_id'];
+		$prepare[] = $args['conversation_id'];
 
-        if ($me_peer && $me_peer->deleted_at) {
-            $query .= " AND created_at > %s";
-            $prepare[] = $me_peer->deleted_at;
-        }
+		if ( $me_peer && $me_peer->deleted_at ) {
+			$query     .= " AND created_at > %s";
+			$prepare[] = $me_peer->deleted_at;
+		}
 
-        if (isset($args['after'])) {
-            $query .= " AND id > %d";
-            $prepare[] = $args['after'];
-        }
+		if ( isset( $args['after'] ) ) {
+			$query     .= " AND id > %d";
+			$prepare[] = $args['after'];
+		}
 
-        if (isset($args['before'])) {
-            $query .= " AND id < %d";
-            $prepare[] = $args['before'];
-        }
+		if ( isset( $args['before'] ) ) {
+			$query     .= " AND id < %d";
+			$prepare[] = $args['before'];
+		}
 
-        $query .= " ORDER BY id DESC LIMIT 20";
+		$query .= " ORDER BY id DESC LIMIT 20";
 
-        $messages = $wpdb->get_results($wpdb->prepare($query, $prepare));
+		$messages = $wpdb->get_results( $wpdb->prepare( $query, $prepare ) );
 
-        // Format messages for display in the chat
-        $messages = array_map(function ($message) use ($conversation) {
-            return self::normalize($message, $conversation);
-        }, $messages);
+		// Format messages for display in the chat
+		$messages = array_map( function ( $message ) use ( $conversation ) {
+			return self::normalize( $message, $conversation );
+		}, $messages );
 
-        return $messages;
-    }
+		return $messages;
+	}
 
-    public static function normalize($message, $conversation)
-    {
-        $peers = $conversation->peers;
+	public static function normalize( $message, $conversation ) {
+		$peers = $conversation->peers;
 
-        $message->conversation = $conversation;
-        $message->content = nl2br($message->content);
-        $message->reactions = $message->reactions ? json_decode($message->reactions, true) : [];
+		$message->conversation = $conversation;
+		$message->content      = nl2br( $message->content );
+		$message->reactions    = $message->reactions ? json_decode( $message->reactions, true ) : [];
 
-        if (!empty($message->reactions)) {
-            $message->reactions = array_map(function ($reaction) use ($peers) {
-                return array_map(function ($peer) use ($peers) {
-                    $peer['peer'] = $peers[$peer['peer_id']] ?? [];
-                    return $peer;
-                }, $reaction);
+		if ( ! empty( $message->reactions ) ) {
+			$message->reactions = array_map( function ( $reaction ) use ( $peers ) {
+				return array_map( function ( $peer ) use ( $peers ) {
+					$peer['peer'] = $peers[ $peer['peer_id'] ] ?? [];
 
-                return $reaction;
-            }, $message->reactions);
-        }
+					return $peer;
+				}, $reaction );
 
-        if ($message->reply_to) {
-            $message->reply_to = json_decode($message->reply_to);
-        }
+				return $reaction;
+			}, $message->reactions );
+		}
 
-        $message->peer = $peers[$message->peer_id] ?? [];
+		if ( $message->reply_to ) {
+			$message->reply_to = json_decode( $message->reply_to );
+		}
 
-        return $message;
-    }
+		$message->peer = $peers[ $message->peer_id ] ?? [];
+
+		return $message;
+	}
 }
