@@ -51,6 +51,7 @@ class Peers_Controller extends Base_Controller {
 			$prepare[] = $peer['avatar'];
 		}
 
+		$query = rtrim( $query, ',' );
 		$query .= " ON DUPLICATE KEY UPDATE deleted_at = NULL";
 
 		$rows_affected = $wpdb->query( $wpdb->prepare( $query, $prepare ) );
