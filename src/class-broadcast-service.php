@@ -33,6 +33,19 @@ class Broadcast_Service {
 			$response['peers'] = $peers;
 		}
 
+		$me_in = false;
+		foreach ( $peers as $peer ) {
+			if ( $peer->user_id == get_current_user_id() ) {
+				$me_in = true;
+			}
+		}
+
+		if ( ! $me_in ) {
+			$this->send_ping();
+
+			return;
+		}
+
 		$messages = Message::get( [
 			'conversation_id' => $this->request->get_param( 'conversation_id' ),
 		] );
@@ -76,11 +89,24 @@ class Broadcast_Service {
 		if ( ! empty( $response ) ) {
 			$json = json_encode( $response );
 
-			echo "data: {$json}\n\n";
-		} else {
-			echo "data: ping\n\n";
+			$this->send_data( $json );
+
+			return;
 		}
 
+		$this->send_ping();
+	}
+
+	private function send_data( $data ) {
+		echo "data: {$data}\n\n";
+
+		ob_flush();
+		flush();
+	}
+
+	private function send_ping()
+	{
+		echo "data: ping\n\n";
 		ob_flush();
 		flush();
 	}

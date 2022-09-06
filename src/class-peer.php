@@ -93,7 +93,11 @@ class Peer {
 	public static function get_conversation_ids() {
 		global $wpdb;
 
-		$query            = "SELECT DISTINCT conversation_id FROM {$wpdb->prefix}prixchat_peers WHERE user_id = %d";
+		$query  = "SELECT DISTINCT conversation_id 
+					FROM {$wpdb->prefix}prixchat_peers 
+					WHERE user_id = %d 
+					AND deleted_at IS NULL";
+
 		$conversation_ids = $wpdb->get_col( $wpdb->prepare( $query, get_current_user_id() ) );
 
 		return $conversation_ids;

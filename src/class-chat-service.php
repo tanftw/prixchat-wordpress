@@ -20,6 +20,7 @@ class Chat_Service {
 		// Set typing to false for the current user
 		Peer::update( [
 			'is_typing' => false,
+			'deleted_at' => null,
 		], [
 			'conversation_id' => $message['conversation_id'],
 			'user_id'         => get_current_user_id(),
