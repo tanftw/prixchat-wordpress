@@ -191,7 +191,7 @@ class Conversations_Controller extends Base_Controller {
 		$update = [
 			'title' => $data['title'],
 		];
-
+		
 		if ( ! empty( $files ) && ! empty( $files['avatar']['tmp_name'] ) ) {
 			require_once( ABSPATH . 'wp-admin/includes/image.php' );
 			require_once( ABSPATH . 'wp-admin/includes/file.php' );

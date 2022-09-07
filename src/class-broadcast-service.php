@@ -3,136 +3,135 @@
 namespace PrixChat;
 
 class Broadcast_Service {
-	protected $after;
+    protected $after;
 
-	public $request;
+    public $request;
 
-	public $chat_service;
+    public $chat_service;
 
-	protected $conversations;
+    protected $conversations;
 
-	public function __construct() {
-		$this->chat_service = new Chat_Service();
-	}
+    public function __construct() {
+        $this->chat_service = new Chat_Service();
+    }
 
-	public function send() {
-		$params          = $this->request->get_params();
-		$conversation_id = $params['conversation_id'];
+    public function send() {
+        $params          = $this->request->get_params();
+        $conversation_id = $params['conversation_id'];
 
-		if ( ! is_numeric( $conversation_id ) ) {
-			exit;
-		}
+        if ( ! is_numeric( $conversation_id ) ) {
+            exit;
+        }
 
-		$response = [];
+        $response = [];
 
-		$peers = Peer::get( [
-			'conversation_id' => $conversation_id,
-		] );
+        $peers = Peer::get( [
+            'conversation_id' => $conversation_id,
+        ] );
 
-		if ( $peers ) {
-			$response['peers'] = $peers;
-		}
+        if ( $peers ) {
+            $response['peers'] = $peers;
+        }
 
-		$me_in = false;
-		foreach ( $peers as $peer ) {
-			if ( $peer->user_id == get_current_user_id() ) {
-				$me_in = true;
-			}
-		}
+        $me_in = false;
+        foreach ( $peers as $peer ) {
+            if ( $peer->user_id == get_current_user_id() ) {
+                $me_in = true;
+            }
+        }
 
-		if ( ! $me_in ) {
-			$this->send_ping();
+        if ( ! $me_in ) {
+            $this->send_ping();
 
-			return;
-		}
+            return;
+        }
 
-		$messages = Message::get( [
-			'conversation_id' => $this->request->get_param( 'conversation_id' ),
-		] );
+        $messages = Message::get( [
+            'conversation_id' => $this->request->get_param( 'conversation_id' ),
+        ] );
 
-		// Add seens to messages
-		if ( $messages ) {
-			foreach ( $messages as $index => $message ) {
-				$message->seens = [];
-				$added          = [];
-				foreach ( $peers as $id => $peer ) {
-					if ( $peer->last_seen >= $message->created_at ) {
-						if ( ! in_array( $peer->id, $added ) ) {
-							$message->seens[] = $peer;
-							$added[]          = $id;
-						}
+        // Add seens to messages
+        if ( $messages ) {
+            foreach ( $messages as $index => $message ) {
+                $message->seens = [];
+                $added          = [];
+                foreach ( $peers as $id => $peer ) {
+                    if ( $peer->last_seen >= $message->created_at ) {
+                        if ( ! in_array( $peer->id, $added ) ) {
+                            $message->seens[] = $peer;
+                            $added[]          = $id;
+                        }
 
-						unset( $peers[ $id ] );
-					}
-				}
+                        unset( $peers[ $id ] );
+                    }
+                }
 
-				$messages[ $index ] = $message;
-			}
+                $messages[ $index ] = $message;
+            }
 
-			$messages = array_reverse( $messages );
+            $messages = array_reverse( $messages );
 
-			$response['messages'] = $messages;
-		}
+            $response['messages'] = $messages;
+        }
 
-		Peer::set_last_seen( $conversation_id );
+        Peer::set_last_seen( $conversation_id );
 
-		$second = date( 's' );
+        $second = date( 's' );
 
-		// Fetch new conversations every 3 seconds to reduce server load
-		if ( $second % 3 === 0 ) {
-			$conversations = $this->chat_service->get_conversations();
-			if ( $conversations ) {
-				$response['conversations'] = $conversations;
-			}
-		}
+        // Fetch new conversations every 3 seconds to reduce server load
+        if ( $second % 3 === 0 ) {
+            $conversations = $this->chat_service->get_conversations();
+            if ( $conversations ) {
+                $response['conversations'] = $conversations;
+            }
+        }
 
-		if ( ! empty( $response ) ) {
-			$json = json_encode( $response );
+        if ( ! empty( $response ) ) {
+            $json = json_encode( $response );
 
-			$this->send_data( $json );
+            $this->send_data( $json );
 
-			return;
-		}
+            return;
+        }
 
-		$this->send_ping();
-	}
+        $this->send_ping();
+    }
 
-	private function send_data( $data ) {
-		echo "data: {$data}\n\n";
+    private function send_data( $data ) {
+        echo "data: {$data}\n\n";
 
-		ob_flush();
-		flush();
-	}
+        ob_flush();
+        flush();
+    }
 
-	private function send_ping()
-	{
-		echo "data: ping\n\n";
-		ob_flush();
-		flush();
-	}
+    private function send_ping() {
+        echo "data: ping\n\n";
+        ob_flush();
+        flush();
+    }
 
-	public function start() {
-		// Enable cors
-		// header('Access-Control-Allow-Origin: *');
-		// header('Access-Control-Allow-Credentials: true');
+    public function start() {
+        // Enable cors
+        // header('Access-Control-Allow-Origin: *');
+        // header('Access-Control-Allow-Credentials: true');
 
-		// Start broadcasting SSE
-		header( 'Content-Type: text/event-stream; charset=utf-8' );
-		header( 'Cache-Control: no-cache' );
-		header( 'Connection: keep-alive' );
-		header( 'X-Accel-Buffering: no' );
+        // Start broadcasting SSE
+        header( 'Content-Type: text/event-stream; charset=utf-8' );
+        header( 'Cache-Control: no-cache' );
+        header( 'Connection: keep-alive' );
+        header( 'X-Accel-Buffering: no' );
 
-		while ( true ) {
-			// Send data to client
-			$this->send();
+        while ( true ) {
+            // Send data to client
+            $this->send();
 
-			// Wait 1 second for the next message / event
-			sleep( 1 );
+            // Wait 1 second for the next message / event
+            sleep( 1 );
 
-			// Stop broadcasting SSE if the client is not connected
-			if ( connection_status() !== CONNECTION_NORMAL ) {
-				exit;
-			}
-		}
-	}
+            // Stop broadcasting SSE if the client is not connected
+            if ( connection_status() !== CONNECTION_NORMAL ) {
+                exit;
+            }
+        }
+    }
 }
