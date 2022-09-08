@@ -1,2 +1,2 @@
-vendor
-react-ui
+react-ui/node_modules
+react-ui/package-lock.json

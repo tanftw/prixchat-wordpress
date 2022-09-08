@@ -28,8 +28,8 @@ class Admin {
             return;
         }
 
-        wp_enqueue_style( 'prixchat-admin', prixchat_URL . '/react-ui/dist/index.css' );
-        wp_enqueue_script( 'prixchat-admin', prixchat_URL . '/react-ui/dist/index.js', [ 'wp-i18n' ], wp_rand(), true );
+        wp_enqueue_style( 'prixchat-admin', PRIXCHAT_URL . '/react-ui/dist/index.css' );
+        wp_enqueue_script( 'prixchat-admin', PRIXCHAT_URL . '/react-ui/dist/index.js', [ 'wp-i18n' ], wp_rand(), true );
         wp_set_script_translations( 'prixchat-admin', 'prixchat' );
 
         $chat_service = new Chat_Service();

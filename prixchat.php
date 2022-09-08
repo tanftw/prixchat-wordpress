@@ -21,8 +21,8 @@ if ( version_compare( PHP_VERSION, '7.0.0', '<' ) ) {
     wp_die( __( 'I need at least PHP 7.0 to run properly!', 'prixchat' ) );
 }
 
-define( 'prixchat_DIR', __DIR__ );
-define( 'prixchat_URL', plugins_url( '', __FILE__ ) );
+define( 'PRIXCHAT_DIR', __DIR__ );
+define( 'PRIXCHAT_URL', plugins_url( '', __FILE__ ) );
 
 require_once __DIR__ . '/src/class-loader.php';
 new PrixChat\Loader;
