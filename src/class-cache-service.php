@@ -10,6 +10,13 @@ class Cache_Service {
         if ( ! wp_next_scheduled( 'prixchat_clear_cache' ) ) {
             wp_schedule_event( time(), 'daily', 'prixchat_clear_cache' );
         }
+
+        add_action( 'profile_update', [$this, 'delete_prixchat_users_transient'] );
+        add_action( 'user_register', [$this, 'delete_prixchat_users_transient'] );
+    }
+
+    public function delete_prixchat_users_transient() {
+        delete_transient( 'prixchat_users' );
     }
 
     /**

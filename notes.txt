@@ -1,3 +1,0 @@
-Check debug.log
-Test all feature
-Check cron after uninstall plugin
