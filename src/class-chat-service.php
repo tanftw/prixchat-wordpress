@@ -187,10 +187,8 @@ class Chat_Service {
             }
         }
 
-        // if ( ( $key = array_search( $me->ID, $exclude ) ) !== false ) {
-        //     unset( $exclude[ $key ] );
-        // }
-
+        $exclude[] = $me->ID;
+        
         // Users as empty conversations
         $users = Peer::get_all_users();
 

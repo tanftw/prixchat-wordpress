@@ -55,6 +55,9 @@ We believe constant update is the key of a healthy software but we also don't wa
 The feature updates releases monthly, every first Tuesday.
 If we found a serious bug, the minor patch will come within 24 hours.
 
+**Help, I have some issues!**
+Please raise a question in plugin's support forum or contact us via hi@prixchat.com
+
 == Changelog ==
 
 #### 1.0.0 (September 06th, 2022)

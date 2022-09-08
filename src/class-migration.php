@@ -7,7 +7,7 @@ namespace PrixChat;
  */
 class Migration {
     // Current database version
-    public static $db_version = '0.4.0';
+    public static $db_version = '1.0.0';
 
     public function __construct() {
         add_action( 'plugins_loaded', [ $this, 'check_migrate' ] );
