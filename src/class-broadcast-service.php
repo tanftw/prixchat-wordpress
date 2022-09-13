@@ -87,9 +87,7 @@ class Broadcast_Service {
         }
 
         if ( ! empty( $response ) ) {
-            $json = json_encode( $response );
-
-            $this->send_data( $json );
+            $this->send_data( $response );
 
             return;
         }
@@ -97,9 +95,26 @@ class Broadcast_Service {
         $this->send_ping();
     }
 
+    private function sanitize_array( $data ) {
+        if (is_object($data)) {
+            $data  = (array) $data;
+        }
+        
+        foreach ($data as $field => $value) {
+            if (is_array($value) || is_object($value)) {
+                $data[$field] = $this->sanitize_array($value);
+            } else {
+                $data[$field] = sanitize_text_field($value);
+            }
+        }
+
+        return $data;
+    }
+
     private function send_data( $data ) {
-        $data = esc_html( $data );
-        echo "data: {$data}\n\n";
+        $sanitized_data = $this->sanitize_array( $data );
+        $json = wp_json_encode( $sanitized_data );
+        echo "data: {$json}\n\n";
 
         ob_flush();
         flush();
