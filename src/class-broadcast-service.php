@@ -98,6 +98,7 @@ class Broadcast_Service {
     }
 
     private function send_data( $data ) {
+        $data = esc_html( $data );
         echo "data: {$data}\n\n";
 
         ob_flush();

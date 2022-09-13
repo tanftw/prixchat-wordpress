@@ -5,7 +5,6 @@ Plugin URI: https://prixchat.com/
 Description: Realtime, effective chat solution for WordPress
 Version: 1.0.0
 Author: PrixChat
-Author URI: https://prixchat.com/
 License: GPLv2 or later
 Text Domain: prixchat
 Domain Path: /languages
