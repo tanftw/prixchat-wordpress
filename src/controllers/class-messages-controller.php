@@ -24,6 +24,7 @@ class Messages_Controller extends Base_Controller {
         ] );
 
         $messages = array_reverse( $messages );
+        $messages = prixchat_escape( $messages );
 
         return new \WP_REST_Response( $messages, 200 );
     }
@@ -82,6 +83,7 @@ class Messages_Controller extends Base_Controller {
         $chat_service = new Chat_Service;
 
         $message = $chat_service->create_message( $data );
+        $message = prixchat_escape( $message );
 
         return new \WP_REST_Response( $message, 200 );
     }

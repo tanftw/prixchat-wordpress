@@ -38,9 +38,12 @@ class Conversation {
             $conversation->title  = $conversation->title ?? $recipient->name;
             // Limit the size of $conversation->title
             $conversation->title = substr( $conversation->title, 0, 20 );
+            $conversation->title = esc_html( $conversation->title );
+            $conversation->avatar = esc_html( $conversation->avatar );
         }
 
         $conversation->meta = json_decode( $conversation->meta, true );
+        $conversation->meta = is_array( $conversation->meta ) ? prixchat_escape($conversation->meta) : [];
         $conversation->url  = $conversation->id;
 
         return $conversation;

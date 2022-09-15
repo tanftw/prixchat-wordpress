@@ -11,6 +11,10 @@ class Loader {
 
     public function load_files() {
         $requires = [
+            // Load helpers
+            'helpers.php',
+            
+            // Load classes
             'class-admin.php',
             'class-broadcast-service.php',
             'class-cache-service.php',

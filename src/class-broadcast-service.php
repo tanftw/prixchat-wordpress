@@ -95,25 +95,9 @@ class Broadcast_Service {
         $this->send_ping();
     }
 
-    private function sanitize_array( $data ) {
-        if (is_object($data)) {
-            $data  = (array) $data;
-        }
-        
-        foreach ($data as $field => $value) {
-            if (is_array($value) || is_object($value)) {
-                $data[$field] = $this->sanitize_array($value);
-            } else {
-                $data[$field] = sanitize_text_field($value);
-            }
-        }
-
-        return $data;
-    }
-
     private function send_data( $data ) {
-        $sanitized_data = $this->sanitize_array( $data );
-        $json = wp_json_encode( $sanitized_data );
+        $escaped_data = prixchat_escape( $data );
+        $json = wp_json_encode( $escaped_data );
         echo "data: {$json}\n\n";
 
         ob_flush();
